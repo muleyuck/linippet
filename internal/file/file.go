@@ -2,7 +2,6 @@ package file
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"path"
@@ -44,7 +43,7 @@ type LinippetData struct {
 func ReadJsonFile(dataPath string) ([]LinippetData, error) {
 	b, err := os.ReadFile(dataPath)
 	if err != nil {
-		return nil, errors.New("Failed read snippet file: " + err.Error())
+		return nil, fmt.Errorf("Failed read snippet file: %w", err)
 	}
 	var d []LinippetData
 	if err := json.Unmarshal(b, &d); err != nil {
@@ -62,7 +61,7 @@ func WriteJsonFile(dataPath string, data string) (err error) {
 	}
 	file, err := os.Create(dataPath)
 	if err != nil {
-		return errors.New("Failed open file: " + err.Error())
+		return fmt.Errorf("Failed open file: %w", err)
 	}
 	defer func() {
 		deferErr := file.Close()
