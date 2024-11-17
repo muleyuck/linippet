@@ -1,0 +1,28 @@
+name: unit-test
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  unit-test:
+    name: Lint Build Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Install dependencies
+        run: go mod tidy
+      - name: Lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+      - name: Build
+        run: go build -v ./...
+      - name: Test
+        run: go test -v ./...

@@ -1,4 +1,4 @@
-# linippet
+# [WIP] linippet
 
 one-liner snippet cli tool
 
