@@ -1,15 +1,12 @@
 /*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
+Copyright © 2024 muleyuck <takuty.008.awenite.1121@gmail.com>
 */
 package cmd
 
 import (
-	"bufio"
 	"fmt"
-	"os"
-	"strings"
 
-	"github.com/Takuty-a11y/linippet/utils"
+	"github.com/Takuty-a11y/linippet/internal/file"
 	"github.com/spf13/cobra"
 )
 
@@ -23,34 +20,21 @@ and usage of using your command. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		addSnippet()
-	},
-}
+	RunE: func(cmd *cobra.Command, args []string) error {
+		defaultCommand := ""
+		// TODO: recieve input value from tui
 
-func addSnippet() {
-	snp := interactive()
-	path, err := utils.GetSnippetFilePath()
-	if err != nil {
-		utils.Fatal(err)
-	}
-	err = utils.WriteFile(path, snp+"\n")
-	if err != nil {
-		utils.Fatal(err)
-	}
-}
-
-func interactive() string {
-	var s string
-	r := bufio.NewReader(os.Stdin)
-	for {
-		fmt.Fprint(os.Stderr, "What is CommandLine?:"+" ")
-		s, _ = r.ReadString('\n')
-		if s != "" {
-			break
+		dataPath, err := file.CheckDataPath()
+		if err != nil {
+			return err
 		}
-	}
-	return strings.TrimSpace(s)
+
+		if err := file.WriteJsonFile(dataPath, defaultCommand); err != nil {
+			return err
+		}
+		fmt.Println("Create snippet success!")
+		return nil
+	},
 }
 
 func init() {

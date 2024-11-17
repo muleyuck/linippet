@@ -1,13 +1,12 @@
 /*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
+Copyright © 2024 muleyuck <takuty.008.awenite.1121@gmail.com>
 */
 package cmd
 
 import (
-	"errors"
 	"fmt"
 
-	"github.com/Takuty-a11y/linippet/utils"
+	"github.com/Takuty-a11y/linippet/internal/file"
 	"github.com/spf13/cobra"
 )
 
@@ -21,26 +20,23 @@ and usage of using your command. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		readSnippets()
+	RunE: func(cmd *cobra.Command, args []string) error {
+		dataPath, err := file.CheckDataPath()
+		if err != nil {
+			return err
+		}
+		linippets, err := file.ReadJsonFile(dataPath)
+		if err != nil {
+			return err
+		}
+		if len(linippets) <= 0 {
+			return fmt.Errorf("There is no snippets")
+		}
+		for i, linippet := range linippets {
+			fmt.Printf("%d : %s\n", i, linippet.Snippet)
+		}
+		return nil
 	},
-}
-
-func readSnippets() {
-	path, err := utils.GetSnippetFilePath()
-	if err != nil {
-		utils.Fatal(err)
-	}
-	snippets, err := utils.ReadFileLines(path)
-	if err != nil {
-		utils.Fatal(err)
-	}
-	if len(snippets) <= 0 {
-		utils.Fatal(errors.New("no snippets"))
-	}
-	for i, snp := range snippets {
-		fmt.Println(i, snp)
-	}
 }
 
 func init() {
