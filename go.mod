@@ -1,4 +1,4 @@
-module github.com/Takuty-a11y/linippet
+module github.com/muleyuck/linippet
 
 go 1.23.1
 

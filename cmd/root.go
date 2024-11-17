@@ -8,7 +8,7 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/Takuty-a11y/linippet/internal/file"
+	"github.com/muleyuck/linippet/internal/file"
 	"github.com/spf13/cobra"
 )
 
