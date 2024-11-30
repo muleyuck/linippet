@@ -6,9 +6,8 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"regexp"
 
-	"github.com/muleyuck/linippet/internal/file"
+	"github.com/muleyuck/linippet/internal/tui"
 	"github.com/spf13/cobra"
 )
 
@@ -25,30 +24,13 @@ to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	RunE: func(cmd *cobra.Command, args []string) error {
-		dataPath, err := file.CheckDataPath()
-		if err != nil {
+		t := tui.NewTui()
+		t.LazyLoadLinippet()
+		t.SetAction()
+		if err := t.StartApp(); err != nil {
 			panic(err)
 		}
-		linippets, err := file.ReadJsonFile(dataPath)
-		if err != nil {
-			panic(err)
-		}
-		// TODO: Fuzzy Search
-		linippet := linippets[0]
-
-		re := regexp.MustCompile(`\${{(\w+)}}`)
-		matchArgs := re.FindAllStringSubmatch(linippet.Snippet, -1)
-		// without change when no args
-		if len(matchArgs) <= 0 {
-			fmt.Println(linippet.Snippet)
-			return nil
-		}
-		// arr := make([]string, len(matchArgs))
-		// for _, matchArg := range matchArgs {
-		// 	arr = append(arr, matchArg[1])
-		// }
-		// TODO: input args by tui
-		fmt.Println(linippet.Snippet)
+		fmt.Println(t.GetResult())
 		return nil
 	},
 }
