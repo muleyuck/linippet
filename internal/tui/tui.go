@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"slices"
 	"strings"
-	"time"
 
 	"github.com/gdamore/tcell/v2"
-	"github.com/muleyuck/linippet/internal/file"
-	"github.com/muleyuck/linippet/internal/helper"
+	"github.com/muleyuck/linippet/internal/linippet"
+	"github.com/muleyuck/linippet/internal/slice"
+	"github.com/muleyuck/linippet/internal/snippet"
 	"github.com/rivo/tview"
 )
 
@@ -17,7 +17,7 @@ type tui struct {
 	flex      *tview.Flex
 	input     *tview.InputField
 	list      *tview.List
-	linippets []file.LinippetData
+	linippets linippet.Linippets
 	result    string
 }
 
@@ -25,7 +25,7 @@ func NewTui() *tui {
 	app := tview.NewApplication()
 
 	input := tview.NewInputField()
-	input.SetLabel("> ")
+	input.SetLabel(snippet.CURRENT_LABEL)
 	input.SetLabelStyle(tcell.StyleDefault.Background(tcell.ColorDefault).Foreground(tcell.ColorDefault).Bold(true))
 	input.SetFieldStyle(tcell.StyleDefault.Background(tcell.ColorDefault).Foreground(tcell.ColorDefault))
 	input.SetAcceptanceFunc(tview.InputFieldMaxLength(200)).SetFieldWidth(0)
@@ -68,13 +68,13 @@ func (t *tui) SetAction() {
 				return nil
 			}
 			currentText, _ := t.list.GetItemText(currentIndex)
-			linippetArgs := helper.ExtractSnippetArgs(currentText)
+			linippetArgs := snippet.ExtractSnippetArgs(currentText)
 			if linippetArgs == nil {
 				t.result = currentText
 				t.app.Stop()
 				return nil
 			}
-			text := helper.RemoveLabelChar(currentText)
+			text := snippet.TrimLabel(currentText)
 			argsFormModal := NewModal().
 				AddInputFields(linippetArgs).
 				AddButtons([]string{"OK", "Cancel"}).
@@ -90,7 +90,7 @@ func (t *tui) SetAction() {
 			})
 			argsFormModal.SetChangedFunc(func(inputIndex int, inputValue string) {
 				if len(inputValue) > 0 {
-					result, err := helper.ReplaceSnippet(text, inputIndex, inputValue)
+					result, err := snippet.ReplaceSnippet(text, inputIndex, inputValue)
 					if err != nil {
 						return
 					}
@@ -123,18 +123,14 @@ func (t *tui) SetAction() {
 				t.list.Clear()
 				if len(text) <= 0 {
 					for index, linippet := range t.linippets {
-						if index == 0 {
-							t.addItem("> " + linippet.Snippet)
-						} else {
-							t.addItem("  " + linippet.Snippet)
-						}
+						t.addItem(index, linippet.Snippet, 0)
 					}
 				} else {
 					// TODO: Fuzzy Search
-					filtered := helper.FilterSlice(slices.Values(t.linippets), func(linippet file.LinippetData) bool {
+					filtered := slice.FilterSlice(slices.Values(t.linippets), func(linippet linippet.Linippet) bool {
 						return strings.Contains(linippet.Snippet, text)
 					})
-					sorted := slices.SortedFunc(filtered, func(a file.LinippetData, b file.LinippetData) int {
+					sorted := slices.SortedFunc(filtered, func(a linippet.Linippet, b linippet.Linippet) int {
 						return 1
 					})
 					currentIndex := t.list.GetCurrentItem()
@@ -142,11 +138,7 @@ func (t *tui) SetAction() {
 						currentIndex = len(sorted) - 1
 					}
 					for index, linippet := range sorted {
-						if currentIndex == index {
-							t.addItem("> " + linippet.Snippet)
-						} else {
-							t.addItem("  " + linippet.Snippet)
-						}
+						t.addItem(index, linippet.Snippet, currentIndex)
 					}
 				}
 			})
@@ -163,7 +155,7 @@ func (t *tui) StartApp() error {
 }
 
 func (t *tui) GetResult() string {
-	return helper.RemoveLabelChar(t.result)
+	return snippet.TrimLabel(t.result)
 }
 
 func mod(a, b int) int {
@@ -179,41 +171,37 @@ func (t *tui) offsetItem(offset int) {
 	if itemCount <= 0 {
 		return
 	}
-	// 移動前のItemのLableを削除
+
 	mainText, _ := t.list.GetItemText(currentIndex)
-	removed := fmt.Sprintf("  %s", helper.RemoveLabelChar(mainText))
-	t.list.SetItemText(currentIndex, removed, "")
-	// 移動
+	t.list.SetItemText(currentIndex, snippet.SetNoCurretLabel(mainText), "")
+
 	distIndex := mod(currentIndex+offset, itemCount)
 	t.list.SetCurrentItem(distIndex)
-	// 移動先のLabelをSet
 	distText, _ := t.list.GetItemText(distIndex)
 
-	t.list.SetItemText(distIndex, helper.AddLabelChar(distText), "")
+	t.list.SetItemText(distIndex, snippet.SetCurrentLabel(distText), "")
 }
 
-func (t *tui) addItem(item string) {
+func (t *tui) addItem(nowIndex int, text string, currentIndex int) {
+	var item string
+	if nowIndex == currentIndex {
+		item = snippet.AddCurrentLabel(text)
+	} else {
+		item = snippet.AddNoCurrentLabel(text)
+	}
 	t.list.AddItem(item, "", 0, nil).ShowSecondaryText(false)
 }
 
 func (t *tui) LazyLoadLinippet() {
 	go func() {
-		time.Sleep(1 * time.Second)
-		dataPath, err := file.CheckDataPath()
-		if err != nil {
-			panic(err)
-		}
-		linippets, err := file.ReadJsonFile(dataPath)
+		// time.Sleep(1 * time.Second)
+		linippets, err := linippet.ReadLinippets()
 		if err != nil {
 			panic(err)
 		}
 		t.app.QueueUpdateDraw(func() {
 			for index, linippet := range linippets {
-				if index == 0 {
-					t.addItem("> " + linippet.Snippet)
-				} else {
-					t.addItem("  " + linippet.Snippet)
-				}
+				t.addItem(index, linippet.Snippet, 0)
 			}
 			t.list.SetTitle(fmt.Sprintf(" %d/%d ", len(linippets), len(linippets))).SetTitleAlign(tview.AlignLeft)
 		})

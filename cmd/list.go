@@ -6,7 +6,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/muleyuck/linippet/internal/file"
+	"github.com/muleyuck/linippet/internal/linippet"
 	"github.com/spf13/cobra"
 )
 
@@ -21,11 +21,7 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		dataPath, err := file.CheckDataPath()
-		if err != nil {
-			return err
-		}
-		linippets, err := file.ReadJsonFile(dataPath)
+		linippets, err := linippet.ReadLinippets()
 		if err != nil {
 			return err
 		}

@@ -6,7 +6,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/muleyuck/linippet/internal/file"
+	"github.com/muleyuck/linippet/internal/linippet"
 	"github.com/spf13/cobra"
 )
 
@@ -24,12 +24,7 @@ to quickly create a Cobra application.`,
 		defaultCommand := ""
 		// TODO: recieve input value from tui
 
-		dataPath, err := file.CheckDataPath()
-		if err != nil {
-			return err
-		}
-
-		if err := file.WriteJsonFile(dataPath, defaultCommand); err != nil {
+		if err := linippet.WriteLinippets(defaultCommand); err != nil {
 			return err
 		}
 		fmt.Println("Create snippet success!")
