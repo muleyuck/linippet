@@ -21,7 +21,7 @@ func NewModal() *Modal {
 		textColor: tview.Styles.PrimaryTextColor,
 	}
 	m.form = tview.NewForm().
-		SetFieldBackgroundColor(tcell.ColorDefault).
+		SetFieldBackgroundColor(tcell.ColorGray).
 		SetButtonsAlign(tview.AlignCenter).
 		SetButtonBackgroundColor(tcell.ColorDefault).
 		SetButtonTextColor(tcell.ColorDefault).
@@ -100,11 +100,18 @@ func (m *Modal) SetChangedFunc(handler func(inputIndex int, inputValue string)) 
 func (m *Modal) AddInputFields(labels []string) *Modal {
 	for index, label := range labels {
 		func(i int, l string) {
-			m.form.AddInputField(label, "", 48, nil, func(text string) {
-				if m.changed != nil {
-					m.changed(i, text)
-				}
-			})
+			input := tview.NewInputField().
+				SetLabel(label).
+				SetText("").
+				SetFieldWidth(48).
+				SetAcceptanceFunc(nil).
+				SetChangedFunc(func(text string) {
+					if m.changed != nil {
+						m.changed(i, text)
+					}
+				})
+			input.Box.SetBackgroundColor(tcell.ColorDefault)
+			m.form.AddFormItem(input)
 		}(index, label)
 	}
 	m.form.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {

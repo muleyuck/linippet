@@ -63,16 +63,22 @@ func (t *tui) SetAction() {
 			return nil
 		case tcell.KeyEnter:
 			currentIndex := t.list.GetCurrentItem()
+			if t.list.GetItemCount() <= currentIndex {
+				t.app.Stop()
+				return nil
+			}
 			currentText, _ := t.list.GetItemText(currentIndex)
 			linippetArgs := helper.ExtractSnippetArgs(currentText)
 			if linippetArgs == nil {
 				t.result = currentText
 				t.app.Stop()
+				return nil
 			}
+			text := helper.RemoveLabelChar(currentText)
 			argsFormModal := NewModal().
 				AddInputFields(linippetArgs).
 				AddButtons([]string{"OK", "Cancel"}).
-				SetText(helper.RemoveLabelChar(currentText))
+				SetText(text)
 			argsFormModal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 				if buttonLabel == "Cancel" {
 					t.flex.RemoveItem(argsFormModal)
@@ -84,13 +90,13 @@ func (t *tui) SetAction() {
 			})
 			argsFormModal.SetChangedFunc(func(inputIndex int, inputValue string) {
 				if len(inputValue) > 0 {
-					result, err := helper.ReplaceSnippet(currentText, inputIndex, inputValue)
+					result, err := helper.ReplaceSnippet(text, inputIndex, inputValue)
 					if err != nil {
 						return
 					}
 					argsFormModal.SetText(result)
 				} else {
-					argsFormModal.SetText(currentText)
+					argsFormModal.SetText(text)
 				}
 			})
 			argsFormModal.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
@@ -106,6 +112,7 @@ func (t *tui) SetAction() {
 			// TODO: textのLableとColorをリセット
 			t.flex.AddItem(argsFormModal, 0, 0, true)
 			t.app.SetFocus(argsFormModal)
+			return nil
 		}
 		return event
 	})
@@ -115,10 +122,15 @@ func (t *tui) SetAction() {
 			t.app.QueueUpdateDraw(func() {
 				t.list.Clear()
 				if len(text) <= 0 {
-					for _, linippet := range t.linippets {
-						t.addItem(linippet.Snippet)
+					for index, linippet := range t.linippets {
+						if index == 0 {
+							t.addItem("> " + linippet.Snippet)
+						} else {
+							t.addItem("  " + linippet.Snippet)
+						}
 					}
 				} else {
+					// TODO: Fuzzy Search
 					filtered := helper.FilterSlice(slices.Values(t.linippets), func(linippet file.LinippetData) bool {
 						return strings.Contains(linippet.Snippet, text)
 					})
