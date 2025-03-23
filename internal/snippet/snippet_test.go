@@ -31,24 +31,24 @@ func TestGetSnippetArgs(t *testing.T) {
 
 func TestReplaceSnippet(t *testing.T) {
 	tests := []struct {
-		name           string
-		snippet        string
-		index          int
-		value          string
-		expected       string
-		isOccuredError bool
+		name            string
+		snippet         string
+		index           int
+		value           string
+		expected        string
+		isOccurredError bool
 	}{
-		{name: "empty snippet", snippet: "", index: 0, value: "", expected: "", isOccuredError: true},
-		{name: "not args", snippet: "ls .", index: 0, value: "hoge", expected: "", isOccuredError: true},
-		{name: "invalid arg character", snippet: "ls ${args}", index: 0, value: "hoge", expected: "", isOccuredError: true},
-		{name: "out of args index", snippet: "ls ${{args}}", index: 1, value: "hoge", expected: "", isOccuredError: true},
-		{name: "success replace", snippet: "ls ${{args}}", index: 0, value: "hoge", expected: "ls hoge", isOccuredError: false},
-		{name: "have many args", snippet: "ls ${{option}} ${{dir}}", index: 1, value: "hoge", expected: "ls ${{option}} hoge", isOccuredError: false},
+		{name: "empty snippet", snippet: "", index: 0, value: "", expected: "", isOccurredError: true},
+		{name: "not args", snippet: "ls .", index: 0, value: "hoge", expected: "", isOccurredError: true},
+		{name: "invalid arg character", snippet: "ls ${args}", index: 0, value: "hoge", expected: "", isOccurredError: true},
+		{name: "out of args index", snippet: "ls ${{args}}", index: 1, value: "hoge", expected: "", isOccurredError: true},
+		{name: "success replace", snippet: "ls ${{args}}", index: 0, value: "hoge", expected: "ls hoge", isOccurredError: false},
+		{name: "have many args", snippet: "ls ${{option}} ${{dir}}", index: 1, value: "hoge", expected: "ls ${{option}} hoge", isOccurredError: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := ReplaceSnippet(tt.snippet, tt.index, tt.value)
-			if err != nil != tt.isOccuredError {
+			if err != nil != tt.isOccurredError {
 				t.Errorf("unexpected error: %+v", err)
 				return
 			}

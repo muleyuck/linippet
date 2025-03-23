@@ -22,7 +22,7 @@ func TrimLabel(snippet string) string {
 	return LabelRegexp.ReplaceAllString(snippet, "${1}")
 }
 
-func SetNoCurretLabel(snippet string) string {
+func SetNoCurrentLabel(snippet string) string {
 	return NO_CURRENT_LABEL + TrimLabel(snippet)
 }
 
