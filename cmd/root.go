@@ -1,5 +1,5 @@
 /*
-Copyright © 2024 muleyuck <takuty.008.awenite.1121@gmail.com>
+Copyright © 2025 muleyuck <takuty.008.awenite.1121@gmail.com>
 */
 package cmd
 
@@ -7,31 +7,52 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/muleyuck/linippet/internal/linippet"
 	"github.com/muleyuck/linippet/internal/tui"
 	"github.com/spf13/cobra"
 )
 
-// rootCmd represents the base command when called without any subcommands
+var (
+	versionFlag bool
+	listFlag    bool
+)
+
+const VERSION string = "0.1.0"
+
 var rootCmd = &cobra.Command{
 	Use:   "linippet",
 	Short: "Choose your snippet and output stdout",
 	Long:  `linippet is submit a snippet you have registered.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
 	RunE: func(cmd *cobra.Command, args []string) error {
-		t := tui.NewRootTui()
-		t.LazyLoadLinippet()
-		t.SetAction()
-		if err := t.StartApp(); err != nil {
-			panic(err)
+		versionFlag, _ := cmd.Flags().GetBool("version")
+		listFlag, _ := cmd.Flags().GetBool("list")
+		if versionFlag {
+			fmt.Printf("linippet v%s\n", VERSION)
+		} else if listFlag {
+			linippets, err := linippet.ReadLinippets()
+			if err != nil {
+				return err
+			}
+			if len(linippets) <= 0 {
+				fmt.Println("There are no snippets")
+				return nil
+			}
+			for i, linippet := range linippets {
+				fmt.Printf("%d : %s\n", i+1, linippet.Snippet)
+			}
+		} else {
+			t := tui.NewRootTui()
+			t.LazyLoadLinippet()
+			t.SetAction()
+			if err := t.StartApp(); err != nil {
+				panic(err)
+			}
+			fmt.Println(t.GetTrimmedResult())
 		}
-		fmt.Println(t.GetTrimmedResult())
 		return nil
 	},
 }
 
-// Execute adds all child commands to the root command and sets flags appropriately.
-// This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	err := rootCmd.Execute()
 	if err != nil {
@@ -40,13 +61,6 @@ func Execute() {
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.go-cli-sample.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	// rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.Flags().BoolVarP(&versionFlag, "version", "v", false, "version")
+	rootCmd.Flags().BoolVar(&listFlag, "list", false, "show snippet list")
 }
