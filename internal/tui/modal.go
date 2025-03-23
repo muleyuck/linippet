@@ -12,6 +12,7 @@ type Modal struct {
 	text      string
 	textColor tcell.Color
 	changed   func(inputIndex int, inputValue string)
+	textView  *tview.TextView
 	done      func(buttonIndex int, buttonLabel string)
 }
 
@@ -97,20 +98,29 @@ func (m *Modal) SetChangedFunc(handler func(inputIndex int, inputValue string)) 
 	return m
 }
 
-func (m *Modal) AddInputFields(labels []string) *Modal {
+func (m *Modal) AddTextView(label string) *Modal {
+	view := tview.NewTextView().SetLabel(label)
+	m.form.AddFormItem(view)
+	m.textView = view
+	return m
+}
+
+func (m *Modal) AddInputFields(labels []string, texts []string) *Modal {
 	for index, label := range labels {
+		text := ""
+		if texts != nil && len(texts) > index {
+			text = texts[index]
+		}
 		func(i int, l string) {
 			input := tview.NewInputField().
 				SetLabel(label).
-				SetText("").
-				SetFieldWidth(48).
+				SetText(text).
 				SetAcceptanceFunc(nil).
 				SetChangedFunc(func(text string) {
 					if m.changed != nil {
 						m.changed(i, text)
 					}
 				})
-			input.Box.SetBackgroundColor(tcell.ColorDefault)
 			m.form.AddFormItem(input)
 		}(index, label)
 	}
@@ -120,6 +130,10 @@ func (m *Modal) AddInputFields(labels []string) *Modal {
 			return tcell.NewEventKey(tcell.KeyTab, 0, tcell.ModNone)
 		case tcell.KeyUp, tcell.KeyCtrlP:
 			return tcell.NewEventKey(tcell.KeyBacktab, 0, tcell.ModNone)
+		case tcell.KeyCtrlF:
+			return tcell.NewEventKey(tcell.KeyRight, 0, tcell.ModNone)
+		case tcell.KeyCtrlB:
+			return tcell.NewEventKey(tcell.KeyLeft, 0, tcell.ModNone)
 		}
 
 		return event
@@ -178,16 +192,13 @@ func (m *Modal) HasFocus() bool {
 func (m *Modal) Draw(screen tcell.Screen) {
 	// Calculate the width of this modal.
 	buttonsWidth := 0
-	for i := 0; i < m.form.GetButtonCount(); i++ {
+	for i := range m.form.GetButtonCount() {
 		button := m.form.GetButton(i)
 		buttonsWidth += tview.TaggedStringWidth(button.GetLabel()) + 4 + 2
 	}
 	buttonsWidth -= 2
 	screenWidth, screenHeight := screen.Size()
-	width := screenWidth / 3
-	if width < buttonsWidth {
-		width = buttonsWidth
-	}
+	width := max(screenWidth/3, buttonsWidth)
 	// width is now without the box border.
 
 	// Reset the text and find out how wide it is.

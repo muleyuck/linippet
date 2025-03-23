@@ -4,9 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"slices"
+
+	"github.com/google/uuid"
 )
 
 type Linippet struct {
+	Id      string `json:"id"`
 	Snippet string `json:"snippet"`
 }
 type Linippets []Linippet
@@ -31,16 +35,54 @@ func readJson(path string) (Linippets, error) {
 	return linippets, nil
 }
 
-func WriteLinippets(snippet string) (err error) {
-	path, err := checkJsonPath()
-	if err != nil {
-		return err
-	}
-	linippets, err := readJson(path)
+func AddLinippet(snippet string) error {
+	linippets, err := ReadLinippets()
 	if err != nil {
 		// create new data when reading error
 		fmt.Println(err)
 		linippets = Linippets{}
+	}
+	linippets = append(linippets, Linippet{
+		Id:      uuid.NewString(),
+		Snippet: snippet,
+	})
+	return writeLinippets(linippets)
+}
+
+func UpdateLinippet(id, snippet string) error {
+	linippets, err := ReadLinippets()
+	if err != nil {
+		return err
+	}
+	targetIndex := slices.IndexFunc(linippets, func(l Linippet) bool {
+		return id == l.Id
+	})
+	if targetIndex == -1 {
+		return fmt.Errorf("Linippet Id %s is no found", id)
+	}
+	linippets[targetIndex].Snippet = snippet
+	return writeLinippets(linippets)
+}
+
+func RemoveLinippet(id string) error {
+	linippets, err := ReadLinippets()
+	if err != nil {
+		return err
+	}
+	targetIndex := slices.IndexFunc(linippets, func(l Linippet) bool {
+		return id == l.Id
+	})
+	if targetIndex == -1 {
+		return fmt.Errorf("Linippet Id %s is no found", id)
+	}
+	newLinippets := slices.Delete(linippets, targetIndex, targetIndex+1)
+	return writeLinippets(newLinippets)
+}
+
+func writeLinippets(linippets Linippets) (err error) {
+	path, err := checkJsonPath()
+	if err != nil {
+		return err
 	}
 	file, err := os.Create(path)
 	if err != nil {
@@ -52,10 +94,6 @@ func WriteLinippets(snippet string) (err error) {
 			err = deferErr
 		}
 	}()
-	// Write data as JSON format file
-	linippets = append(linippets, Linippet{
-		Snippet: snippet,
-	})
 	out, err := json.Marshal(&linippets)
 	if err != nil {
 		return err

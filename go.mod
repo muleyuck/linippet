@@ -2,7 +2,10 @@ module github.com/muleyuck/linippet
 
 go 1.23.1
 
-require github.com/spf13/cobra v1.8.1
+require (
+	github.com/google/uuid v1.6.0
+	github.com/spf13/cobra v1.8.1
+)
 
 require (
 	github.com/gdamore/encoding v1.0.0 // indirect
