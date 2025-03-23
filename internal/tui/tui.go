@@ -21,8 +21,6 @@ type OnlyModalTui struct {
 	modal *Modal
 }
 
-type onLLUModal string
-
 func NewCreateTui() *OnlyModalTui {
 	app := tview.NewApplication()
 	modal := NewModal().

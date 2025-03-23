@@ -162,6 +162,7 @@ func FuzzySearch(query string, linippets linippet.Linippets) []SearchResult {
 		allMatches := make([]int, 0)
 		totalScore := 0
 		for _, q := range queries {
+			// TODO: use cache
 			matches, score := fuzzyMatch(q, linippet.Snippet)
 			if matches == nil {
 				allMatched = false

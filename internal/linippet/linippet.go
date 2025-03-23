@@ -12,6 +12,7 @@ import (
 type Linippet struct {
 	Id      string `json:"id"`
 	Snippet string `json:"snippet"`
+	// TODO: description
 }
 type Linippets []Linippet
 
