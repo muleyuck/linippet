@@ -4,7 +4,7 @@ one-liner snippet cli tool
 
 ## Usage
 
-### Rad your snippet
+### Choose your snippet and output stdout
 
 ```sh
 linippet
