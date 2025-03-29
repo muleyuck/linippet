@@ -34,7 +34,7 @@ var rootCmd = &cobra.Command{
 				return err
 			}
 			if len(linippets) <= 0 {
-				fmt.Println("There are no snippets")
+				fmt.Println("linippet: There are no snippets")
 				return nil
 			}
 			for i, linippet := range linippets {
