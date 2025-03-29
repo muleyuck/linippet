@@ -207,14 +207,14 @@ func (t *listModalTui) offsetItem(offset int) {
 		return
 	}
 
-	mainText, _ := t.list.GetItemText(currentIndex)
-	t.list.SetItemText(currentIndex, snippet.SetNoCurrentLabel(mainText), "")
+	mainText, secondaryText := t.list.GetItemText(currentIndex)
+	t.list.SetItemText(currentIndex, snippet.SetNoCurrentLabel(mainText), secondaryText)
 
 	distIndex := mod(currentIndex+offset, itemCount)
 	t.list.SetCurrentItem(distIndex)
-	distText, _ := t.list.GetItemText(distIndex)
+	distText, distSecondary := t.list.GetItemText(distIndex)
 
-	t.list.SetItemText(distIndex, snippet.SetCurrentLabel(distText), "")
+	t.list.SetItemText(distIndex, snippet.SetCurrentLabel(distText), distSecondary)
 }
 
 func (t *listModalTui) addItem(nowIndex int, mainText string, secondaryText string, currentIndex int) {
