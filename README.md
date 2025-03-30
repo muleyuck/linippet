@@ -1,7 +1,12 @@
+[![unit-test](https://github.com/muleyuck/linippet/actions/workflows/unit-test.yml/badge.svg)](https://github.com/muleyuck/linippet/actions/workflows/unit-test.yml)
+![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)
+[![GoDoc](https://godoc.org/github.com/muleyuck/linippet?status.svg)](https://godoc.org/github.com/muleyuck/linippet) 
+
+
 # 🍾 linippet
 
 linppet is tui tool which generate command from pre-registered your snipppet for bash/zsh.  
-You can register snippet have dynamic arugments.
+You can register snippet have dynamic arguments.
 
 
 ## Installation
@@ -60,6 +65,10 @@ linippet will be triggered when press `^o` key. And your selected snippet will s
 linippet [create|edit|remove]
 ```
 
-## LISENCE
+## Inspired by
+
+linippet inspired by [Warp workflow](https://docs.warp.dev/features/warp-drive/workflows)
+
+## LICENCE
 
 [The MIT Licence](https://github.com/muleyuck/linippet/blob/main/LICENSE)
