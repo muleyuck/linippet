@@ -1,0 +1,33 @@
+name: check-version
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - v*
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Install dependencies
+        run: go mod tidy
+      - name: Check match tag version
+        run: |
+          tag_name=${GITHUB_REF#refs/*/}
+          tag_version="linippet $tag_name"
+          echo $tag_version
+          app_version=$(go run ./... --version)
+          echo $app_version
+          if [[ ${tag_version} != ${app_version} ]]; then
+            return 1
+          fi

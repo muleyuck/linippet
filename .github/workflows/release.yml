@@ -3,6 +3,11 @@ on:
   push:
     tags:
       - v*
+      # workflow_run:
+      #   workflows:
+      #     - check-version
+      #   types:
+      #     - completed
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
