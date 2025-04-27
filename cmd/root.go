@@ -47,7 +47,7 @@ var rootCmd = &cobra.Command{
 			if err := t.StartApp(); err != nil {
 				panic(err)
 			}
-			fmt.Println(t.GetTrimmedResult())
+			fmt.Println(t.Result)
 		}
 		return nil
 	},

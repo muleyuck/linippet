@@ -10,6 +10,8 @@ import (
 	"github.com/rivo/tview"
 )
 
+const FOCUS_LABEL = "> "
+
 type tui struct {
 	app    *tview.Application
 	Result string
@@ -76,7 +78,7 @@ type listModalTui struct {
 	*tui
 	flex      *tview.Flex
 	input     *tview.InputField
-	list      *tview.List
+	list      *List
 	linippets linippet.Linippets
 	modalFunc func(string) *Modal
 	SelectId  string
@@ -104,12 +106,13 @@ func newListModalTui() *listModalTui {
 	app := tview.NewApplication()
 
 	input := tview.NewInputField()
-	input.SetLabel(snippet.CURRENT_LABEL)
+	input.SetLabel(FOCUS_LABEL)
 	input.SetLabelStyle(tcell.StyleDefault.Background(tcell.ColorDefault).Foreground(tcell.ColorDefault).Bold(true))
 	input.SetFieldStyle(tcell.StyleDefault.Background(tcell.ColorDefault).Foreground(tcell.ColorDefault))
 	input.SetAcceptanceFunc(tview.InputFieldMaxLength(200)).SetFieldWidth(0)
 
-	list := tview.NewList()
+	list := NewList()
+	list.SetLabel(FOCUS_LABEL)
 	list.SetBackgroundColor(tcell.ColorDefault)
 	list.SetBorder(true)
 	list.SetHighlightFullLine(true)
@@ -147,7 +150,7 @@ func (t *listModalTui) SetAction() {
 			}
 			currentText, linippetId := t.list.GetItemText(currentIndex)
 			t.SelectId = linippetId
-			modal := t.modalFunc(snippet.TrimLabel(currentText))
+			modal := t.modalFunc(currentText)
 			if modal == nil {
 				t.app.Stop()
 				return nil
@@ -164,16 +167,13 @@ func (t *listModalTui) SetAction() {
 			t.app.QueueUpdateDraw(func() {
 				t.list.Clear()
 				if len(text) <= 0 {
-					for index, linippet := range t.linippets {
-						t.addItem(index, linippet.Snippet, linippet.Id, 0)
+					for _, linippet := range t.linippets {
+						t.addItem(linippet.Snippet, linippet.Id, nil)
 					}
 				} else {
 					sorted := fuzzy_search.FuzzySearch(text, t.linippets)
-					currentIndex := min(t.list.GetCurrentItem(), len(sorted)-1)
-
-					for index, result := range sorted {
-						// TODO: set color (change tview list add item)
-						t.addItem(index, result.Linippet.Snippet, result.Linippet.Id, currentIndex)
+					for _, result := range sorted {
+						t.addItem(result.Linippet.Snippet, result.Linippet.Id, result.Matches)
 					}
 				}
 			})
@@ -187,10 +187,6 @@ func (t *listModalTui) StartApp() error {
 		return err
 	}
 	return nil
-}
-
-func (t *listModalTui) GetTrimmedResult() string {
-	return snippet.TrimLabel(t.Result)
 }
 
 func mod(a, b int) int {
@@ -207,24 +203,12 @@ func (t *listModalTui) offsetItem(offset int) {
 		return
 	}
 
-	mainText, secondaryText := t.list.GetItemText(currentIndex)
-	t.list.SetItemText(currentIndex, snippet.SetNoCurrentLabel(mainText), secondaryText)
-
 	distIndex := mod(currentIndex+offset, itemCount)
 	t.list.SetCurrentItem(distIndex)
-	distText, distSecondary := t.list.GetItemText(distIndex)
-
-	t.list.SetItemText(distIndex, snippet.SetCurrentLabel(distText), distSecondary)
 }
 
-func (t *listModalTui) addItem(nowIndex int, mainText string, secondaryText string, currentIndex int) {
-	var main string
-	if nowIndex == currentIndex {
-		main = snippet.AddCurrentLabel(mainText)
-	} else {
-		main = snippet.AddNoCurrentLabel(mainText)
-	}
-	t.list.AddItem(main, secondaryText, 0, nil).ShowSecondaryText(false)
+func (t *listModalTui) addItem(mainText string, secondaryText string, matchIndices []int) {
+	t.list.AddItem(mainText, secondaryText, 0, nil, matchIndices).ShowSecondaryText(false)
 }
 
 func (t *listModalTui) LazyLoadLinippet() {
@@ -235,8 +219,8 @@ func (t *listModalTui) LazyLoadLinippet() {
 			panic(err)
 		}
 		t.app.QueueUpdateDraw(func() {
-			for index, linippet := range linippets {
-				t.addItem(index, linippet.Snippet, linippet.Id, 0)
+			for _, linippet := range linippets {
+				t.addItem(linippet.Snippet, linippet.Id, nil)
 			}
 			t.list.SetTitle(fmt.Sprintf(" %d/%d ", len(linippets), len(linippets))).SetTitleAlign(tview.AlignLeft)
 		})
