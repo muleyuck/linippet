@@ -9,6 +9,7 @@ import (
 
 	"github.com/muleyuck/linippet/internal/linippet"
 	"github.com/muleyuck/linippet/internal/tui"
+	"github.com/muleyuck/linippet/scripts"
 	"github.com/spf13/cobra"
 )
 
@@ -16,8 +17,6 @@ var (
 	versionFlag bool
 	listFlag    bool
 )
-
-const VERSION string = "0.2.0"
 
 var rootCmd = &cobra.Command{
 	Use:   "linippet",
@@ -27,7 +26,7 @@ var rootCmd = &cobra.Command{
 		versionFlag, _ := cmd.Flags().GetBool("version")
 		listFlag, _ := cmd.Flags().GetBool("list")
 		if versionFlag {
-			fmt.Printf("linippet v%s\n", VERSION)
+			fmt.Printf("linippet %s", scripts.AppVersion)
 		} else if listFlag {
 			linippets, err := linippet.ReadLinippets()
 			if err != nil {
