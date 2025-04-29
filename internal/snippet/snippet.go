@@ -26,17 +26,20 @@ func ExtractSnippetArgs(snippet string) []string {
 	return linippetArgs
 }
 
-func ReplaceSnippet(snippet string, index int, value string) (string, error) {
-	var result string
-	if index < 0 {
-		return result, fmt.Errorf("invalid index %d", index)
+func ReplaceSnippet(snippet string, args []string) (string, error) {
+	result := snippet
+	if len(args) == 0 {
+		return result, fmt.Errorf("must have args")
 	}
-	matchArgs := ReplaceRegexp.FindAllStringSubmatch(snippet, index+1)
-	if len(matchArgs) <= 0 {
-		return result, fmt.Errorf("args is not found")
+	matchArgs := ReplaceRegexp.FindAllStringSubmatch(result, len(args))
+	for index, arg := range args {
+		if len(matchArgs) <= 0 {
+			return result, fmt.Errorf("args is not found")
+		}
+		if len(matchArgs) <= index {
+			return result, fmt.Errorf("out of range: index is %d", index)
+		}
+		result = strings.Replace(result, matchArgs[index][1], arg, 1)
 	}
-	if len(matchArgs) <= index {
-		return result, fmt.Errorf("aut of range: index is %d", index)
-	}
-	return strings.Replace(snippet, matchArgs[index][1], value, 1), nil
+	return result, nil
 }

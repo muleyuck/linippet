@@ -13,9 +13,10 @@ import (
 const FOCUS_LABEL = "> "
 
 type tui struct {
-	app    *tview.Application
-	Result string
-	Submit bool
+	app          *tview.Application
+	Result       string
+	linippetArgs []string
+	Submit       bool
 }
 
 type OnlyModalTui struct {
@@ -230,10 +231,11 @@ func (t *listModalTui) LazyLoadLinippet() {
 
 func (t *listModalTui) setRootModal(currentText string) *Modal {
 	linippetArgs := snippet.ExtractSnippetArgs(currentText)
-	if linippetArgs == nil {
+	if len(linippetArgs) == 0 {
 		t.Result = currentText
 		return nil
 	}
+	t.linippetArgs = linippetArgs
 	modal := NewModal().
 		AddInputFields(linippetArgs, nil).
 		AddButtons([]string{"OK", "Cancel"}).
@@ -249,7 +251,8 @@ func (t *listModalTui) setRootModal(currentText string) *Modal {
 	})
 	modal.SetChangedFunc(func(inputIndex int, inputValue string) {
 		if len(inputValue) > 0 {
-			result, err := snippet.ReplaceSnippet(currentText, inputIndex, inputValue)
+			t.linippetArgs[inputIndex] = inputValue
+			result, err := snippet.ReplaceSnippet(currentText, t.linippetArgs)
 			if err != nil {
 				return
 			}
