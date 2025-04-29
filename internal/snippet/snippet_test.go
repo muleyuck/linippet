@@ -40,7 +40,7 @@ func TestReplaceSnippet(t *testing.T) {
 		{name: "empty snippet", snippet: "", args: []string{}, expected: "", isOccurredError: true},
 		{name: "not args", snippet: "ls .", args: []string{"hoge"}, expected: "ls .", isOccurredError: true},
 		{name: "invalid arg character", snippet: "ls ${args}", args: []string{"hoge"}, expected: "ls ${args}", isOccurredError: true},
-		{name: "out of args index", snippet: "ls ${{args}}", args: []string{}, expected: "ls ${args}}", isOccurredError: true},
+		{name: "out of args index", snippet: "ls ${{args}}", args: []string{}, expected: "ls ${{args}}", isOccurredError: true},
 		{name: "success replace", snippet: "ls ${{args}}", args: []string{"hoge"}, expected: "ls hoge", isOccurredError: false},
 		{name: "have many args", snippet: "ls ${{option}} ${{dir}}", args: []string{"hoge"}, expected: "ls hoge ${{dir}}", isOccurredError: false},
 		{name: "success multiple args", snippet: "ls ${{option}} ${{dir}}", args: []string{"hoge", "fuga"}, expected: "ls hoge fuga", isOccurredError: false},
