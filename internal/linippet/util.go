@@ -7,18 +7,18 @@ import (
 )
 
 const (
-	ENV_NAME               = "LINIPPET_DATA"
-	DEFAULT_LINIPPET_DIR   = ".linippet"
-	DEFAULT_DATA_FILE_NAME = "linippet.json"
+	ENV_NAME                = "LINIPPET_DATA"
+	DEFAULT_LINIPPET_DIR    = ".linippet"
+	LINIPPET_DATA_FILE_NAME = "linippet.json"
 )
 
 func getJsonPath() string {
 	configPath, isExist := os.LookupEnv(ENV_NAME)
 	if len(configPath) > 0 && isExist {
-		return filepath.Clean(configPath)
+		return filepath.Join(filepath.Clean(configPath), LINIPPET_DATA_FILE_NAME)
 	}
 	homeDir, _ := os.UserHomeDir()
-	return filepath.Join(homeDir, DEFAULT_LINIPPET_DIR, DEFAULT_DATA_FILE_NAME)
+	return filepath.Join(homeDir, DEFAULT_LINIPPET_DIR, LINIPPET_DATA_FILE_NAME)
 }
 
 func checkJsonPath() (dataPath string, err error) {
