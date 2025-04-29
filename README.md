@@ -1,5 +1,6 @@
 [![unit-test](https://github.com/muleyuck/linippet/actions/workflows/unit-test.yml/badge.svg)](https://github.com/muleyuck/linippet/actions/workflows/unit-test.yml)
 ![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)
+[![Release](https://img.shields.io/github/release/muleyuck/linippet.svg)](https://github.com/muleyuck/linippet/releases/latest)
 [![GoDoc](https://godoc.org/github.com/muleyuck/linippet?status.svg)](https://godoc.org/github.com/muleyuck/linippet) 
 
 

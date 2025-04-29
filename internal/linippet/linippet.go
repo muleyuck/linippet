@@ -27,7 +27,7 @@ func ReadLinippets() (Linippets, error) {
 func readJson(path string) (Linippets, error) {
 	b, err := os.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("Failed read snippet file: %w", err)
+		return nil, fmt.Errorf("failed read snippet file: %w", err)
 	}
 	var linippets Linippets
 	if err := json.Unmarshal(b, &linippets); err != nil {
@@ -87,7 +87,7 @@ func writeLinippets(linippets Linippets) (err error) {
 	}
 	file, err := os.Create(path)
 	if err != nil {
-		return fmt.Errorf("Failed open file: %w", err)
+		return fmt.Errorf("failed open file: %w", err)
 	}
 	defer func() {
 		deferErr := file.Close()

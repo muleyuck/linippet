@@ -29,14 +29,14 @@ func ExtractSnippetArgs(snippet string) []string {
 func ReplaceSnippet(snippet string, index int, value string) (string, error) {
 	var result string
 	if index < 0 {
-		return result, fmt.Errorf("Invalid index %d", index)
+		return result, fmt.Errorf("invalid index %d", index)
 	}
 	matchArgs := ReplaceRegexp.FindAllStringSubmatch(snippet, index+1)
 	if len(matchArgs) <= 0 {
-		return result, fmt.Errorf("Args is not found")
+		return result, fmt.Errorf("args is not found")
 	}
 	if len(matchArgs) <= index {
-		return result, fmt.Errorf("Out of range: index is %d", index)
+		return result, fmt.Errorf("aut of range: index is %d", index)
 	}
 	return strings.Replace(snippet, matchArgs[index][1], value, 1), nil
 }
