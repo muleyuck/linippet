@@ -1,5 +1,2 @@
 # Added by goreleaser init:
 dist/
-
-# ignore version change for avoiding `Git is in a dirty state` in goreleaser
-scripts/app_version
