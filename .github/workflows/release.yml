@@ -18,7 +18,7 @@ jobs:
         run: |
           pushed_tag=${GITHUB_REF#refs/tags/}
           if [[ ! $pushed_tag =~ v[0-9]+.[0-9]+.[0-9] ]]; then
-              echo Invalid version. You must enter version like v1.2.34 for example
+              echo invalid version string. expected format v1.2.3.
               exit 1
           fi
           sed -i -e "s/.*/$pushed_tag/" ./scripts/app_version
