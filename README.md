@@ -41,12 +41,12 @@ eval "$(linippet init bash)"
 linippet create
 ```
 
-2. Choose your registered snippet. Then the snippet will be evaluated
+2. Choose your registered snippet. Then the snippet will be evaluated in your shell.
 ```sh
 lip
 ```
 
-If you don't want the selected snippet to be evaluated, you can only output to A with the following command.
+If you don't want the selected snippet to be evaluated, you can only output to stdout with the following command.
 
 ```sh
 linippet
