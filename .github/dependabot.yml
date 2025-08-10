@@ -1,0 +1,10 @@
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: / # Location of go.mod
+    assignees:
+      - muleyuck
+    schedule:
+      interval: weekly
+      day: saturday
+      timezone: Asia/Tokyo
