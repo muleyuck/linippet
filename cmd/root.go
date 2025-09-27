@@ -61,5 +61,5 @@ func Execute() {
 
 func init() {
 	rootCmd.Flags().BoolVarP(&versionFlag, "version", "v", false, "version")
-	rootCmd.Flags().BoolVar(&listFlag, "list", false, "show snippet list")
+	rootCmd.Flags().BoolVarP(&listFlag, "list", "l", false, "show snippet list")
 }
