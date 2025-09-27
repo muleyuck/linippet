@@ -171,11 +171,13 @@ func (t *listModalTui) SetAction() {
 					for _, linippet := range t.linippets {
 						t.addItem(linippet.Snippet, linippet.Id, nil)
 					}
+					t.list.SetTitle(fmt.Sprintf(" %d/%d ", len(t.linippets), len(t.linippets))).SetTitleAlign(tview.AlignLeft)
 				} else {
 					sorted := fuzzy_search.FuzzySearch(text, t.linippets)
 					for _, result := range sorted {
 						t.addItem(result.Linippet.Snippet, result.Linippet.Id, result.Matches)
 					}
+					t.list.SetTitle(fmt.Sprintf(" %d/%d ", len(sorted), len(t.linippets))).SetTitleAlign(tview.AlignLeft)
 				}
 			})
 		}()
