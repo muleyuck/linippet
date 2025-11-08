@@ -9,6 +9,8 @@
 linppet is tui tool which generate command from pre-registered your snipppet for bash/zsh.  
 You can register snippet have dynamic arguments.
 
+![demo](https://github.com/user-attachments/assets/a65dc0b4-a436-4fe5-b604-b85f0dd35375)
+
 
 ## Installation
 
