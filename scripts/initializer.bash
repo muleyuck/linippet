@@ -20,7 +20,7 @@ alias lip=linippet_apply
 export LINIPPET_TRIGGER_BIND_KEY=${LINIPPET_TRIGGER_BIND_KEY}
 
 # READLINE is supported at version which is 4 or later
-if [[ -n $LINIPPET_TRIGGER_BIND_KEY && -n "${BASH_VERSINFO[0]}" && "${BASH_VERSINFO[0]}" >= 4 ]]; then
+if [[ -n $LINIPPET_TRIGGER_BIND_KEY && -n "${BASH_VERSINFO[0]}" && "${BASH_VERSINFO[0]}" -ge 4 ]]; then
     linippet_triggered() {
         local snippet="$(linippet)"
 
