@@ -5,12 +5,6 @@ linippet_apply() {
         return 1
     fi
 
-    # Only One-liner
-    if [[ $snippet == *"\n"* || $snippet == *"\r"* ]]; then
-        echo "linippet is supported only one-liner snippet"
-        return 1
-    fi
-
     eval "$snippet"
 
     return 0
@@ -24,13 +18,6 @@ if [[ -n $LINIPPET_TRIGGER_BIND_KEY ]]; then
         local snippet="$(linippet)"
 
         if [[ -z $snippet ]]; then
-            zle accept-line
-            return 1
-        fi
-
-        # Only One-liner
-        if [[ $snippet == *"\n"* || $snippet == *"\r"* ]]; then
-            echo "linippet is supported only one-liner snippet"
             zle accept-line
             return 1
         fi

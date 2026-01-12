@@ -43,3 +43,13 @@ func ReplaceSnippet(snippet string, args []string) (string, error) {
 	}
 	return result, nil
 }
+
+// Validate snipppet is one-liner
+// One-liner means that it does not contain any newline characters."
+// However, line ending character strings are permitted.”
+func ValidateSnippet(snippet string) error {
+	if strings.ContainsAny(snippet, "\n\r") {
+		return fmt.Errorf("linippet is supported only one-liner snippet")
+	}
+	return nil
+}
