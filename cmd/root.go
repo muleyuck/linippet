@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/muleyuck/linippet/internal/linippet"
+	"github.com/muleyuck/linippet/internal/snippet"
 	"github.com/muleyuck/linippet/internal/tui"
 	"github.com/muleyuck/linippet/scripts"
 	"github.com/spf13/cobra"
@@ -45,6 +46,9 @@ var rootCmd = &cobra.Command{
 			t.SetAction()
 			if err := t.StartApp(); err != nil {
 				panic(err)
+			}
+			if err := snippet.ValidateSnippet(t.Result); err != nil {
+				return err
 			}
 			fmt.Println(t.Result)
 		}

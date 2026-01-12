@@ -58,3 +58,28 @@ func TestReplaceSnippet(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateSnippet(t *testing.T) {
+	tests := []struct {
+		name            string
+		snippet         string
+		isOccurredError bool
+	}{
+		{name: "valid one line", snippet: "echo 'hello world'", isOccurredError: false},
+		{name: "valid with literal backslash-n", snippet: "echo \"Line1\\nLine2\"", isOccurredError: false},
+		{name: "valid with echo -e", snippet: "echo -e \"Line1\\nLine2\"", isOccurredError: false},
+		{name: "valid complex command", snippet: "ls -la | grep test && echo done", isOccurredError: false},
+		{name: "invalid with actual newline", snippet: "echo \"Line1\"\necho \"Line2\"", isOccurredError: true},
+		{name: "invalid with CRLF", snippet: "echo \"Line1\"\r\necho \"Line2\"", isOccurredError: true},
+		{name: "invalid with CR only", snippet: "echo \"Line1\"\recho \"Line2\"", isOccurredError: true},
+		{name: "invalid with multiple newlines", snippet: "echo \"Line1\"\necho \"Line2\"\necho \"Line3\"", isOccurredError: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateSnippet(tt.snippet)
+			if (err != nil) != tt.isOccurredError {
+				t.Errorf("In spite of isOccurredError = %+v, error occurred: %+v", tt.isOccurredError, err)
+			}
+		})
+	}
+}
