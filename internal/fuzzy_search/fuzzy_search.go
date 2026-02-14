@@ -3,26 +3,95 @@ package fuzzy_search
 import (
 	"slices"
 	"strings"
-	"unicode"
 
 	"github.com/muleyuck/linippet/internal/linippet"
 )
 
-func backtraceMatch(dp map[int]map[int]int, query, target string, i, j int) []int {
+// fzf-aligned scoring constants
+const (
+	scoreMatch        = 16 // base score per matched character
+	scoreGapStart     = -3 // penalty for starting a gap
+	scoreGapExtension = -1 // penalty per additional gap character
+
+	bonusBoundaryWhite = 10 // match after whitespace
+	bonusBoundaryDelim = 9  // match after delimiter (/ . , : ; |)
+	bonusBoundary      = 8  // match after other non-alphanumeric
+	bonusCamelCase     = 7  // lower→upper transition
+	bonusConsecutive   = 4  // consecutive match
+	bonusFirstCharMul  = 2  // multiplier for first matched character bonus
+
+	bonusExactMatch    = 100 // exact match bonus
+	bonusPrefixChar    = 4   // per-character prefix match bonus
+	bonusSimilarityMax = 30  // max similarity length bonus
+)
+
+// charClass categorizes characters for boundary bonus calculation.
+type charClass int
+
+const (
+	charWhite     charClass = iota // whitespace
+	charDelimiter                  // / . , : ; | - _
+	charNonWord                    // other non-alphanumeric
+	charLower                      // lowercase letter
+	charUpper                      // uppercase letter
+	charNumber                     // digit
+)
+
+func charClassOf(c byte) charClass {
+	switch {
+	case c == ' ' || c == '\t' || c == '\n' || c == '\r':
+		return charWhite
+	case c == '/' || c == '.' || c == ',' || c == ':' || c == ';' || c == '|' || c == '-' || c == '_':
+		return charDelimiter
+	case c >= 'a' && c <= 'z':
+		return charLower
+	case c >= 'A' && c <= 'Z':
+		return charUpper
+	case c >= '0' && c <= '9':
+		return charNumber
+	default:
+		return charNonWord
+	}
+}
+
+func isAlphaNumClass(c charClass) bool {
+	return c == charLower || c == charUpper || c == charNumber
+}
+
+func bonusFor(prevClass, currClass charClass) int {
+	if !isAlphaNumClass(currClass) {
+		return 0
+	}
+	switch {
+	case prevClass == charWhite:
+		return bonusBoundaryWhite
+	case prevClass == charDelimiter:
+		return bonusBoundaryDelim
+	case !isAlphaNumClass(prevClass):
+		return bonusBoundary
+	case prevClass == charLower && currClass == charUpper:
+		return bonusCamelCase
+	default:
+		return 0
+	}
+}
+
+func backtraceMatch(dp []int, cols int, query, target string, i, j int) []int {
 	positions := []int{}
 
 	for i > 0 && j > 0 {
 		if query[i-1] == target[j-1] {
-			positions = append([]int{j - 1}, positions...)
+			positions = append(positions, j-1)
 			i--
 			j--
-		} else if dp[i][j] == dp[i-1][j]+1 {
+		} else if dp[i*cols+j] == dp[(i-1)*cols+j]+1 {
 			i--
 		} else {
 			j--
 		}
 	}
 
+	slices.Reverse(positions)
 	return positions
 }
 
@@ -38,35 +107,33 @@ func fuzzyMatch(query, snippet string) ([]int, int) {
 	queryLower := strings.ToLower(query)
 	snippetLower := strings.ToLower(snippet)
 
-	dp := make(map[int]map[int]int)
+	cols := snippetLen + 1
+	dp := make([]int, (queryLen+1)*cols)
 	for i := range queryLen + 1 {
-		dp[i] = make(map[int]int, snippetLen+1)
-		dp[i][0] = i
+		dp[i*cols] = i
 	}
-	for j := 0; j <= snippetLen; j++ {
-		dp[0][j] = 0
-	}
+	// dp[0*cols+j] is already 0 from make
 
 	// Fill DP table
 	for i := 1; i <= queryLen; i++ {
 		for j := 1; j <= snippetLen; j++ {
 			if queryLower[i-1] == snippetLower[j-1] {
-				dp[i][j] = dp[i-1][j-1]
+				dp[i*cols+j] = dp[(i-1)*cols+(j-1)]
 			} else {
 				// minimum delete or skip
-				deletion := dp[i-1][j] + 1
-				insertion := dp[i][j-1]
-				dp[i][j] = min(deletion, insertion)
+				deletion := dp[(i-1)*cols+j] + 1
+				insertion := dp[i*cols+(j-1)]
+				dp[i*cols+j] = min(deletion, insertion)
 			}
 		}
 	}
 
 	// minimum match index and cost
-	minCost := dp[queryLen][0]
+	minCost := dp[queryLen*cols]
 	bestPos := 0
 	for j := 1; j <= snippetLen; j++ {
-		if dp[queryLen][j] < minCost {
-			minCost = dp[queryLen][j]
+		if dp[queryLen*cols+j] < minCost {
+			minCost = dp[queryLen*cols+j]
 			bestPos = j
 		}
 		if minCost == 0 {
@@ -78,15 +145,9 @@ func fuzzyMatch(query, snippet string) ([]int, int) {
 	if minCost != 0 {
 		return nil, 0
 	}
-	matchPositions := backtraceMatch(dp, queryLower, snippetLower, queryLen, bestPos)
+	matchPositions := backtraceMatch(dp, cols, queryLower, snippetLower, queryLen, bestPos)
 	score := calculateScore(query, snippet, matchPositions)
 	return matchPositions, score
-}
-
-const BASE_MATCH_SCORE = 100
-
-func isAlphaNumeric(r rune) bool {
-	return (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9')
 }
 
 func calculateScore(query, snippet string, matches []int) int {
@@ -94,108 +155,73 @@ func calculateScore(query, snippet string, matches []int) int {
 		return 0
 	}
 
-	score := 100
+	score := 0
+	consecutiveStartBonus := 0 // bonus of the character that started the consecutive run
+	prevMatchIdx := -1
 
-	// 1. Exact match Bonus
-	if snippet == query {
-		score += 1000
+	for i, pos := range matches {
+		// Base match score
+		charScore := scoreMatch
+
+		// Context bonus from character class transition
+		var prevClass charClass
+		if pos == 0 {
+			prevClass = charWhite // treat start of string as whitespace boundary
+		} else {
+			prevClass = charClassOf(snippet[pos-1])
+		}
+		currClass := charClassOf(snippet[pos])
+		ctxBonus := bonusFor(prevClass, currClass)
+
+		if i > 0 && pos == prevMatchIdx+1 {
+			// Consecutive match: inherit the max of context bonus,
+			// the consecutive-run start bonus, and base consecutive bonus.
+			// This is a key fzf property where consecutive matches inherit
+			// the boundary bonus of the character that started the run.
+			bonus := max(ctxBonus, consecutiveStartBonus, bonusConsecutive)
+			charScore += bonus
+		} else {
+			// Non-consecutive: apply gap penalty
+			if i > 0 {
+				gapLen := pos - prevMatchIdx - 1
+				charScore += scoreGapStart + scoreGapExtension*(gapLen-1)
+			}
+			charScore += ctxBonus
+			consecutiveStartBonus = ctxBonus
+		}
+
+		// First matched character gets bonus multiplied
+		if i == 0 {
+			charScore += ctxBonus * (bonusFirstCharMul - 1)
+		}
+
+		score += charScore
+		prevMatchIdx = pos
 	}
 
-	// 2. Prefix match Bonus
-	prefixMatchLength := 0
-	for i := 0; i < len(query) && i < len(snippet); i++ {
-		if query[i] != snippet[i] {
+	// Global bonuses
+
+	// Exact match
+	if strings.EqualFold(query, snippet) {
+		score += bonusExactMatch
+	}
+
+	// Prefix match
+	queryLower := strings.ToLower(query)
+	snippetLower := strings.ToLower(snippet)
+	prefixLen := 0
+	for i := 0; i < len(queryLower) && i < len(snippetLower); i++ {
+		if queryLower[i] != snippetLower[i] {
 			break
 		}
-		prefixMatchLength++
+		prefixLen++
 	}
-	score += prefixMatchLength * 15
+	score += prefixLen * bonusPrefixChar
 
-	// 3. Continuous match Bonus
-	consecutiveCount := 0
-	for i := 1; i < len(matches); i++ {
-		if matches[i] == matches[i-1]+1 {
-			consecutiveCount++
-			score += consecutiveCount * consecutiveCount * 3
-		} else {
-			consecutiveCount = 0
-		}
-	}
-
-	// 4. Top of snippet word Bonus
-	for i, pos := range matches {
-		if pos == 0 || !isAlphaNumeric(rune(snippet[pos-1])) {
-			score += 40
-			if i == 0 {
-				score += 20
-			}
-		}
-	}
-
-	// 5. Camelcase or snake_case Bonus
-	for _, pos := range matches {
-		if pos > 0 {
-			prevChar := rune(snippet[pos-1])
-			currChar := rune(snippet[pos])
-			if unicode.IsLower(prevChar) && unicode.IsUpper(currChar) {
-				score += 30
-			}
-			if prevChar == '_' || prevChar == '-' {
-				score += 25
-			}
-		}
-	}
-
-	// 6. Similarity length Bonus
+	// Similarity length bonus
 	matchRatio := float64(len(query)) / float64(len(snippet))
-	if matchRatio > 0.7 {
-		score += int(matchRatio * 100)
-	}
-
-	// 7. position distribution Bonus
-	if len(matches) > 1 {
-		totalGap := matches[len(matches)-1] - matches[0]
-		idealGap := float64(totalGap) / float64(len(matches)-1)
-
-		// calc gap
-		gapVariance := 0.0
-		for i := 1; i < len(matches); i++ {
-			gap := float64(matches[i] - matches[i-1])
-			gapVariance += (gap - idealGap) * (gap - idealGap)
-		}
-		gapVariance /= float64(len(matches) - 1)
-
-		score -= int(gapVariance / 10)
-	}
-
-	// 8. Top or Bottom of char match Bonus
-	if len(matches) > 0 && query[0] == snippet[matches[0]] {
-		score += 25
-	}
-	if len(matches) > 0 && len(query) > 0 && query[len(query)-1] == snippet[matches[len(matches)-1]] {
-		score += 15
-	}
-
-	// 9. forward match Bonus
-	normalizationLen := 1.0 / float64(len(snippet))
-	for i, pos := range matches {
-		positionBonus := float64(len(snippet)-pos) * normalizationLen
-		score += int(positionBonus * (10.0 / float64(i+1)))
-	}
-
-	// 10. kind of car BOnus
-	for _, pos := range matches {
-		if pos < len(snippet) {
-			c := rune(snippet[pos])
-			if unicode.IsLetter(c) {
-				score += 2
-			} else if unicode.IsDigit(c) {
-				score += 1
-			} else {
-				// any other car
-				score += 3
-			}
-		}
+	if matchRatio > 0.5 {
+		score += int(matchRatio * bonusSimilarityMax)
 	}
 
 	return score
@@ -234,9 +260,12 @@ func FuzzySearch(query string, linippets linippet.Linippets) []SearchResult {
 		}
 	}
 
-	// sort desc by score
+	// sort desc by score, then asc by snippet length as tiebreaker
 	slices.SortFunc(results, func(a, b SearchResult) int {
-		return b.Score - a.Score
+		if a.Score != b.Score {
+			return b.Score - a.Score
+		}
+		return len(a.Linippet.Snippet) - len(b.Linippet.Snippet)
 	})
 	return results
 }
