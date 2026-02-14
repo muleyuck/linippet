@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/gdamore/tcell/v2"
@@ -77,12 +78,13 @@ func (t *OnlyModalTui) StartApp() error {
 
 type listModalTui struct {
 	*tui
-	flex      *tview.Flex
-	input     *tview.InputField
-	list      *List
-	linippets linippet.Linippets
-	modalFunc func(string) *Modal
-	SelectId  string
+	flex         *tview.Flex
+	input        *tview.InputField
+	list         *List
+	linippets    linippet.Linippets
+	modalFunc    func(string) *Modal
+	SelectId     string
+	searchCancel context.CancelFunc
 }
 
 func NewRootTui() *listModalTui {
@@ -164,21 +166,36 @@ func (t *listModalTui) SetAction() {
 		return event
 	})
 	t.input.SetChangedFunc(func(text string) {
+		if t.searchCancel != nil {
+			t.searchCancel()
+		}
+
+		if len(text) <= 0 {
+			t.searchCancel = nil
+			t.list.Clear()
+			for _, linippet := range t.linippets {
+				t.addItem(linippet.Snippet, linippet.Id, nil)
+			}
+			t.list.SetTitle(fmt.Sprintf(" %d/%d ", len(t.linippets), len(t.linippets))).SetTitleAlign(tview.AlignLeft)
+			return
+		}
+
+		ctx, cancel := context.WithCancel(context.Background())
+		t.searchCancel = cancel
 		go func() {
+			sorted := fuzzy_search.FuzzySearch(ctx, text, t.linippets)
+			if sorted == nil {
+				return
+			}
 			t.app.QueueUpdateDraw(func() {
-				t.list.Clear()
-				if len(text) <= 0 {
-					for _, linippet := range t.linippets {
-						t.addItem(linippet.Snippet, linippet.Id, nil)
-					}
-					t.list.SetTitle(fmt.Sprintf(" %d/%d ", len(t.linippets), len(t.linippets))).SetTitleAlign(tview.AlignLeft)
-				} else {
-					sorted := fuzzy_search.FuzzySearch(text, t.linippets)
-					for _, result := range sorted {
-						t.addItem(result.Linippet.Snippet, result.Linippet.Id, result.Matches)
-					}
-					t.list.SetTitle(fmt.Sprintf(" %d/%d ", len(sorted), len(t.linippets))).SetTitleAlign(tview.AlignLeft)
+				if t.input.GetText() != text {
+					return
 				}
+				t.list.Clear()
+				for _, result := range sorted {
+					t.addItem(result.Linippet.Snippet, result.Linippet.Id, result.Matches)
+				}
+				t.list.SetTitle(fmt.Sprintf(" %d/%d ", len(sorted), len(t.linippets))).SetTitleAlign(tview.AlignLeft)
 			})
 		}()
 	})

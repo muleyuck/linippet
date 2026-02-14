@@ -1,6 +1,7 @@
 package fuzzy_search
 
 import (
+	"context"
 	"slices"
 	"strings"
 
@@ -233,7 +234,7 @@ type SearchResult struct {
 	Score    int
 }
 
-func FuzzySearch(query string, linippets linippet.Linippets) []SearchResult {
+func FuzzySearch(ctx context.Context, query string, linippets linippet.Linippets) []SearchResult {
 	// split query by whitespace
 	queries := strings.Fields(query)
 	if len(queries) == 0 {
@@ -242,6 +243,9 @@ func FuzzySearch(query string, linippets linippet.Linippets) []SearchResult {
 	results := make([]SearchResult, 0)
 
 	for _, linippet := range linippets {
+		if ctx.Err() != nil {
+			return nil
+		}
 		allMatched := true
 		allMatches := make([]int, 0)
 		totalScore := 0
