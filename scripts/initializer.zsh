@@ -18,7 +18,6 @@ if [[ -n $LINIPPET_TRIGGER_BIND_KEY ]]; then
         local snippet="$(linippet)"
 
         if [[ -z $snippet ]]; then
-            zle accept-line
             return 1
         fi
 
