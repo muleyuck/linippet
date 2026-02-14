@@ -14,8 +14,12 @@ You can register snippet have dynamic arguments.
 
 ## Installation
 
-### 1. Install binary  
- Go
+### 1. Install binary
+Shell script (Linux/macOS)
+```sh
+curl -sSfL https://raw.githubusercontent.com/muleyuck/linippet/main/install.sh | sh
+```
+Go
 ```sh
 go install github.com/muleyuck/linippet@latest
 ```
