@@ -3,6 +3,7 @@ package tui
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/muleyuck/linippet/internal/fuzzy_search"
@@ -31,7 +32,7 @@ func NewCreateTui() *OnlyModalTui {
 		AddInputFields([]string{""}, nil).
 		AddTextView("").
 		AddButtons([]string{"OK", "Cancel"}).
-		SetText("Enter your new snippet\nYou can set argument : ${{arg_name}}")
+		SetText("Enter your new snippet\nYou can set argument : ${{arg_name}} or ${{arg_name:default}}")
 	app.SetRoot(modal, true)
 	return &OnlyModalTui{
 		tui:   &tui{app: app},
@@ -42,13 +43,7 @@ func NewCreateTui() *OnlyModalTui {
 func (t *OnlyModalTui) SetAction() {
 	t.modal.SetChangedFunc(func(inputIndex int, inputValue string) {
 		t.Result = inputValue
-		linippetArgs := snippet.ExtractSnippetArgs(inputValue)
-		if len(linippetArgs) > 0 {
-			text := fmt.Sprintf("This snippet have following arguments\n %v", linippetArgs)
-			t.modal.textView.SetText(text)
-		} else {
-			t.modal.textView.SetText("")
-		}
+		t.modal.textView.SetText(argDisplayText(inputValue))
 	})
 	t.modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 		if buttonLabel == "Cancel" || buttonIndex == -1 {
@@ -249,14 +244,19 @@ func (t *listModalTui) LazyLoadLinippet() {
 }
 
 func (t *listModalTui) setRootModal(currentText string) *Modal {
-	linippetArgs := snippet.ExtractSnippetArgs(currentText)
-	if len(linippetArgs) == 0 {
+	args := snippet.ExtractSnippetArgsWithDefaults(currentText)
+	if len(args) == 0 {
 		t.Result = currentText
 		return nil
 	}
-	t.linippetArgs = linippetArgs
+	argNames := make([]string, len(args))
+	t.linippetArgs = make([]string, len(args))
+	for i, arg := range args {
+		argNames[i] = arg.Name
+		t.linippetArgs[i] = arg.Default
+	}
 	modal := NewModal().
-		AddInputFields(linippetArgs, nil).
+		AddInputFields(argNames, t.linippetArgs).
 		AddButtons([]string{"OK", "Cancel"}).
 		SetText(currentText)
 	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
@@ -264,21 +264,22 @@ func (t *listModalTui) setRootModal(currentText string) *Modal {
 			t.flex.RemoveItem(modal)
 			t.app.SetFocus(t.input)
 		} else if buttonLabel == "OK" {
-			t.Result = modal.text
+			result, err := snippet.ReplaceSnippet(currentText, t.linippetArgs)
+			if err != nil {
+				result = currentText
+			}
+			t.Result = result
 			t.app.Stop()
 		}
 	})
 	modal.SetChangedFunc(func(inputIndex int, inputValue string) {
-		if len(inputValue) > 0 {
-			t.linippetArgs[inputIndex] = inputValue
-			result, err := snippet.ReplaceSnippet(currentText, t.linippetArgs)
-			if err != nil {
-				return
-			}
-			modal.SetText(result)
-		} else {
+		t.linippetArgs[inputIndex] = inputValue
+		result, err := snippet.ReplaceSnippet(currentText, t.linippetArgs)
+		if err != nil {
 			modal.SetText(currentText)
+			return
 		}
+		modal.SetText(result)
 	})
 	modal.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
@@ -293,30 +294,34 @@ func (t *listModalTui) setRootModal(currentText string) *Modal {
 	return modal
 }
 
+func argDisplayText(inputValue string) string {
+	args := snippet.ExtractSnippetArgsWithDefaults(inputValue)
+	if len(args) == 0 {
+		return ""
+	}
+	argStrs := make([]string, len(args))
+	for i, a := range args {
+		if a.Default != "" {
+			argStrs[i] = fmt.Sprintf("%s (default: %s)", a.Name, a.Default)
+		} else {
+			argStrs[i] = a.Name
+		}
+	}
+	return "This snippet have following arguments\n " + strings.Join(argStrs, "\n ")
+}
+
 func (t *listModalTui) setEditModal(currentText string) *Modal {
 	modal := NewModal().
 		AddInputFields([]string{""}, []string{currentText}).
 		AddTextView("").
 		AddButtons([]string{"OK", "Cancel"}).
-		SetText("Edit snippet\nYou can set argument : ${{arg_name}}")
+		SetText("Edit snippet\nYou can set argument : ${{arg_name}} or ${{arg_name:default}}")
 
 	t.Result = currentText
-	linippetArgs := snippet.ExtractSnippetArgs(currentText)
-	if len(linippetArgs) > 0 {
-		text := fmt.Sprintf("This snippet have following arguments\n %v", linippetArgs)
-		modal.textView.SetText(text)
-	} else {
-		modal.textView.SetText("")
-	}
+	modal.textView.SetText(argDisplayText(currentText))
 	modal.SetChangedFunc(func(inputIndex int, inputValue string) {
 		t.Result = inputValue
-		linippetArgs := snippet.ExtractSnippetArgs(inputValue)
-		if len(linippetArgs) > 0 {
-			text := fmt.Sprintf("This snippet have following arguments\n %v", linippetArgs)
-			modal.textView.SetText(text)
-		} else {
-			modal.textView.SetText("")
-		}
+		modal.textView.SetText(argDisplayText(inputValue))
 	})
 	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 		if buttonLabel == "Cancel" || buttonIndex == -1 {
