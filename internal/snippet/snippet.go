@@ -9,21 +9,25 @@ import (
 var (
 	LabelRegexp       = regexp.MustCompile(`^>\s(.+)`)
 	NoLabelRegexp     = regexp.MustCompile(`^\s\s(.+)`)
-	ExtractArgsRegexp = regexp.MustCompile(`\${{(\w+)}}`)
-	ReplaceRegexp     = regexp.MustCompile(`(\${{\w+}})`)
+	ExtractArgsRegexp = regexp.MustCompile(`\${{(\w+)(?::([^}]*))?}}`)
+	ReplaceRegexp     = regexp.MustCompile(`(\${{[^}]*}})`)
 )
 
-func ExtractSnippetArgs(snippet string) []string {
+type Arg struct {
+	Name    string
+	Default string
+}
+
+func ExtractSnippetArgsWithDefaults(snippet string) []Arg {
 	matchArgs := ExtractArgsRegexp.FindAllStringSubmatch(snippet, -1)
-	// without change when no args
 	if len(matchArgs) <= 0 {
 		return nil
 	}
-	linippetArgs := make([]string, 0, len(matchArgs))
+	args := make([]Arg, 0, len(matchArgs))
 	for _, matchArg := range matchArgs {
-		linippetArgs = append(linippetArgs, matchArg[1])
+		args = append(args, Arg{Name: matchArg[1], Default: matchArg[2]})
 	}
-	return linippetArgs
+	return args
 }
 
 func ReplaceSnippet(snippet string, args []string) (string, error) {

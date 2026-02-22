@@ -5,29 +5,30 @@ import (
 	"testing"
 )
 
-func TestGetSnippetArgs(t *testing.T) {
+func TestExtractSnippetArgsWithDefaults(t *testing.T) {
 	tests := []struct {
 		name     string
 		snippet  string
-		expected []string
+		expected []Arg
 	}{
 		{name: "empty snippet", snippet: "", expected: nil},
-		{name: "not args", snippet: "ls .", expected: nil},
-		{name: "invalid arg character", snippet: "ls ${args}", expected: nil},
-		{name: "too many arg character", snippet: "ls ${{{args}}}", expected: nil},
-		{name: "has one arg", snippet: "ls ${{option}}", expected: []string{"option"}},
-		{name: "invalid second args", snippet: "ls ${{option}} ${{{dir}}} ", expected: []string{"option"}},
-		{name: "have many args", snippet: "ls ${{option}} ${{dir}} ", expected: []string{"option", "dir"}},
+		{name: "no args", snippet: "ls .", expected: nil},
+		{name: "arg with default", snippet: "echo ${{greeting:hello}}", expected: []Arg{{Name: "greeting", Default: "hello"}}},
+		{name: "arg without default", snippet: "echo ${{name}}", expected: []Arg{{Name: "name", Default: ""}}},
+		{name: "mixed args", snippet: "echo ${{a:x}} ${{b}}", expected: []Arg{{Name: "a", Default: "x"}, {Name: "b", Default: ""}}},
+		{name: "default with special chars", snippet: "curl ${{url:localhost:8080}}", expected: []Arg{{Name: "url", Default: "localhost:8080"}}},
+		{name: "empty default value with colon", snippet: "echo ${{arg:}}", expected: []Arg{{Name: "arg", Default: ""}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := ExtractSnippetArgs(tt.snippet)
+			result := ExtractSnippetArgsWithDefaults(tt.snippet)
 			if !reflect.DeepEqual(result, tt.expected) {
 				t.Errorf("result is %+v, but expected is %+v", result, tt.expected)
 			}
 		})
 	}
 }
+
 
 func TestReplaceSnippet(t *testing.T) {
 	tests := []struct {
@@ -44,6 +45,10 @@ func TestReplaceSnippet(t *testing.T) {
 		{name: "success replace", snippet: "ls ${{args}}", args: []string{"hoge"}, expected: "ls hoge", isOccurredError: false},
 		{name: "have many args", snippet: "ls ${{option}} ${{dir}}", args: []string{"hoge"}, expected: "ls hoge ${{dir}}", isOccurredError: false},
 		{name: "success multiple args", snippet: "ls ${{option}} ${{dir}}", args: []string{"hoge", "fuga"}, expected: "ls hoge fuga", isOccurredError: false},
+		{name: "replace arg with default syntax", snippet: "echo ${{greeting:hello}}", args: []string{"hi"}, expected: "echo hi", isOccurredError: false},
+		{name: "replace using default value", snippet: "echo ${{greeting:hello}}", args: []string{"hello"}, expected: "echo hello", isOccurredError: false},
+		{name: "replace mixed default and no-default", snippet: "echo ${{a:x}} ${{b}}", args: []string{"x", "y"}, expected: "echo x y", isOccurredError: false},
+		{name: "replace empty placeholder", snippet: "echo ${{}}", args: []string{"hello"}, expected: "echo hello", isOccurredError: false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
