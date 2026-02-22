@@ -99,7 +99,7 @@ func (m *Modal) SetChangedFunc(handler func(inputIndex int, inputValue string)) 
 }
 
 func (m *Modal) AddTextView(label string) *Modal {
-	view := tview.NewTextView().SetLabel(label)
+	view := tview.NewTextView().SetLabel(label).SetScrollable(false)
 	m.form.AddFormItem(view)
 	m.textView = view
 	return m
