@@ -51,7 +51,7 @@ func (t *OnlyModalTui) SetAction() {
 		}
 	})
 	t.modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-		if buttonLabel == "Cancel" {
+		if buttonLabel == "Cancel" || buttonIndex == -1 {
 			t.app.Stop()
 		} else if buttonLabel == "OK" {
 			t.Submit = true
@@ -260,7 +260,7 @@ func (t *listModalTui) setRootModal(currentText string) *Modal {
 		AddButtons([]string{"OK", "Cancel"}).
 		SetText(currentText)
 	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-		if buttonLabel == "Cancel" {
+		if buttonLabel == "Cancel" || buttonIndex == -1 {
 			t.flex.RemoveItem(modal)
 			t.app.SetFocus(t.input)
 		} else if buttonLabel == "OK" {
@@ -319,7 +319,7 @@ func (t *listModalTui) setEditModal(currentText string) *Modal {
 		}
 	})
 	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-		if buttonLabel == "Cancel" {
+		if buttonLabel == "Cancel" || buttonIndex == -1 {
 			t.flex.RemoveItem(modal)
 			t.app.SetFocus(t.input)
 		} else if buttonLabel == "OK" {
@@ -346,7 +346,7 @@ func (t *listModalTui) setRemoveModal(currentText string) *Modal {
 		SetText("Remove the following snippet?\n\n" + currentText + "\n")
 
 	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
-		if buttonLabel == "Cancel" {
+		if buttonLabel == "Cancel" || buttonIndex == -1 {
 			t.flex.RemoveItem(modal)
 			t.app.SetFocus(t.input)
 		} else if buttonLabel == "OK" {
