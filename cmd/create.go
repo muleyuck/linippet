@@ -1,5 +1,5 @@
 /*
-Copyright © 2025 muleyuck <takuty.008.awenite.1121@gmail.com>
+Copyright © 2026 muleyuck <takuty.008.awenite.1121@gmail.com>
 */
 package cmd
 
