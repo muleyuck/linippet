@@ -23,4 +23,3 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: .github/release-please-config.json
           manifest-file: .github/.release-please-manifest.json
-          bootstrap-sha: 9a4f3d27d48880e639eddd8c83ccf5832dcce131

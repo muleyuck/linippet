@@ -1,6 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
   "release-type": "go",
+  "last-release-sha": "9a4f3d27d48880e639eddd8c83ccf5832dcce131",
   "packages": {
     ".": {
       "changelog-sections": [
