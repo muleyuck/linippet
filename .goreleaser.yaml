@@ -29,11 +29,7 @@ checksum:
 snapshot:
   version_template: '{{ .Tag }}-next'
 changelog:
-  sort: asc
-  filters:
-    exclude:
-      - '^docs:'
-      - '^test:'
+  disable: true
 brews:
   - description: One-liner snippet generator for shell.
     homepage: https://github.com/muleyuck/linippet
