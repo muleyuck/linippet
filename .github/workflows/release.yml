@@ -37,7 +37,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
         with:
           fetch-depth: 0
           ref: ${{ needs.release-please.outputs.tag_name }}
@@ -55,19 +55,19 @@ jobs:
           # ignore version change for avoiding `Git is in a dirty state` in goreleaser
           git update-index --skip-worktree ./scripts/app_version
       - name: Set up Go
-        uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v5
         with:
           go-version-file: go.mod
           cache: true
       - name: Generate token
         id: generate_token
-        uses: actions/create-github-app-token@af35edadc00be37caa72ed9f3e6d5f7801bfdf09 # v1
+        uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v1
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           repositories: linippet,homebrew-tap
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@90a3faa9d0182683851fbfa97ca1a2cb983bfca3 # v6
+        uses: goreleaser/goreleaser-action@ec59f474b9834571250b370d4735c50f8e2d1e29 # v6
         with:
           version: ~> v2
           args: release --clean
