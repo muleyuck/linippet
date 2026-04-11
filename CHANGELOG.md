@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.4.0](https://github.com/muleyuck/linippet/compare/v0.3.1...v0.4.0) (2026-04-11)
+
+
+### Features
+
+* align modal text to left and adjust padding ([41082c6](https://github.com/muleyuck/linippet/commit/41082c6b3b8819b23d0550db824521a943f7e920))
+* improve modal text display with snippet preview and layout adjustments ([b01d719](https://github.com/muleyuck/linippet/commit/b01d7194a6e9b4b81227f57bcbd3bb91ea733d60))
+* select all text in input fields when they receive focus ([aaa4d15](https://github.com/muleyuck/linippet/commit/aaa4d15985a97add0641910ae82a167681ee859a))
+* select all text in input fields when they receive focus ([65ff9e7](https://github.com/muleyuck/linippet/commit/65ff9e7bb596b2ed06fefe09f0e3891a36e0bf2f))
+* show snippet preview with resolved args in modal text ([f8b9c15](https://github.com/muleyuck/linippet/commit/f8b9c150b55e619f156572f39ef618a91b5769ad))
+
 ## [0.3.1](https://github.com/muleyuck/linippet/compare/v0.3.0...v0.3.1) (2026-03-04)
 
 
