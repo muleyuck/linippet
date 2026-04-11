@@ -63,7 +63,7 @@ jobs:
         id: generate_token
         uses: actions/create-github-app-token@7bd03711494f032dfa3be3558f7dc8787b0be333 # v1
         with:
-          app-id: ${{ secrets.APP_ID }}
+          client-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           repositories: linippet,homebrew-tap
       - name: Run GoReleaser
