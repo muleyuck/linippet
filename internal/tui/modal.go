@@ -121,6 +121,16 @@ func (m *Modal) AddInputFields(labels []string, texts []string) *Modal {
 						m.changed(i, text)
 					}
 				})
+			input.SetFocusFunc(func() {
+				// Select all text when the field receives focus.
+				if input.GetText() != "" {
+					input.InputHandler()(tcell.NewEventKey(tcell.KeyCtrlL, 0, tcell.ModNone), nil)
+				}
+			})
+			input.SetBlurFunc(func() {
+				// Replace the text with itself on blur to clear the selection state.
+				input.SetText(input.GetText())
+			})
 			m.form.AddFormItem(input)
 		}(index, label)
 	}
