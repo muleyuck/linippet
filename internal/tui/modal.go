@@ -35,7 +35,7 @@ func NewModal() *Modal {
 	})
 	m.frame = tview.NewFrame(m.form).SetBorders(0, 0, 1, 0, 0, 0)
 	m.frame.SetBackgroundColor(tcell.ColorDefault).
-		SetBorderPadding(1, 1, 1, 1)
+		SetBorderPadding(1, 1, 2, 2)
 	return m
 }
 
@@ -98,8 +98,9 @@ func (m *Modal) SetChangedFunc(handler func(inputIndex int, inputValue string)) 
 	return m
 }
 
-func (m *Modal) AddTextView(label string) *Modal {
-	view := tview.NewTextView().SetLabel(label).SetScrollable(false)
+func (m *Modal) AddTextView(text string) *Modal {
+	view := tview.NewTextView().SetScrollable(false)
+	view.SetText(text)
 	m.form.AddFormItem(view)
 	m.textView = view
 	return m
@@ -213,9 +214,9 @@ func (m *Modal) Draw(screen tcell.Screen) {
 
 	// Reset the text and find out how wide it is.
 	m.frame.Clear()
-	lines := tview.WordWrap(m.text, width)
+	lines := tview.WordWrap(m.text, width-2)
 	for _, line := range lines {
-		m.frame.AddText(line, true, tview.AlignCenter, m.textColor)
+		m.frame.AddText(line, true, tview.AlignLeft, m.textColor)
 	}
 
 	// Set the modal's position and size.

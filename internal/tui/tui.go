@@ -3,7 +3,6 @@ package tui
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/muleyuck/linippet/internal/fuzzy_search"
@@ -30,9 +29,9 @@ func NewCreateTui() *OnlyModalTui {
 	app := tview.NewApplication()
 	modal := NewModal().
 		AddInputFields([]string{""}, nil).
-		AddTextView("").
+		AddTextView("Syntax: ${{name}} or ${{name:default}}").
 		AddButtons([]string{"OK", "Cancel"}).
-		SetText("Enter your new snippet\nYou can set argument : ${{arg_name}} or ${{arg_name:default}}")
+		SetText("$ ")
 	app.SetRoot(modal, true)
 	return &OnlyModalTui{
 		tui:   &tui{app: app},
@@ -43,7 +42,7 @@ func NewCreateTui() *OnlyModalTui {
 func (t *OnlyModalTui) SetAction() {
 	t.modal.SetChangedFunc(func(inputIndex int, inputValue string) {
 		t.Result = inputValue
-		t.modal.textView.SetText(argDisplayText(inputValue))
+		t.modal.SetText("$ " + snippetPreviewText(inputValue))
 	})
 	t.modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 		if buttonLabel == "Cancel" || buttonIndex == -1 {
@@ -258,7 +257,7 @@ func (t *listModalTui) setRootModal(currentText string) *Modal {
 	modal := NewModal().
 		AddInputFields(argNames, t.linippetArgs).
 		AddButtons([]string{"OK", "Cancel"}).
-		SetText(currentText)
+		SetText("$ " + snippetPreviewText(currentText))
 	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 		if buttonLabel == "Cancel" || buttonIndex == -1 {
 			t.flex.RemoveItem(modal)
@@ -276,10 +275,10 @@ func (t *listModalTui) setRootModal(currentText string) *Modal {
 		t.linippetArgs[inputIndex] = inputValue
 		result, err := snippet.ReplaceSnippet(currentText, t.linippetArgs)
 		if err != nil {
-			modal.SetText(currentText)
+			modal.SetText("$ " + currentText)
 			return
 		}
-		modal.SetText(result)
+		modal.SetText("$ " + result)
 	})
 	modal.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
@@ -294,34 +293,37 @@ func (t *listModalTui) setRootModal(currentText string) *Modal {
 	return modal
 }
 
-func argDisplayText(inputValue string) string {
-	args := snippet.ExtractSnippetArgsWithDefaults(inputValue)
+func snippetPreviewText(snippetText string) string {
+	args := snippet.ExtractSnippetArgsWithDefaults(snippetText)
 	if len(args) == 0 {
-		return ""
+		return snippetText
 	}
-	argStrs := make([]string, len(args))
-	for i, a := range args {
-		if a.Default != "" {
-			argStrs[i] = fmt.Sprintf("%s (default: %s)", a.Name, a.Default)
+	previewArgs := make([]string, len(args))
+	for i, arg := range args {
+		if arg.Default != "" {
+			previewArgs[i] = arg.Default
 		} else {
-			argStrs[i] = a.Name
+			previewArgs[i] = "<" + arg.Name + ">"
 		}
 	}
-	return "This snippet have following arguments\n " + strings.Join(argStrs, "\n ")
+	result, err := snippet.ReplaceSnippet(snippetText, previewArgs)
+	if err != nil {
+		return snippetText
+	}
+	return result
 }
 
 func (t *listModalTui) setEditModal(currentText string) *Modal {
 	modal := NewModal().
 		AddInputFields([]string{""}, []string{currentText}).
-		AddTextView("").
+		AddTextView("Syntax: ${{name}} or ${{name:default}}").
 		AddButtons([]string{"OK", "Cancel"}).
-		SetText("Edit snippet\nYou can set argument : ${{arg_name}} or ${{arg_name:default}}")
+		SetText("$ " + snippetPreviewText(currentText))
 
 	t.Result = currentText
-	modal.textView.SetText(argDisplayText(currentText))
 	modal.SetChangedFunc(func(inputIndex int, inputValue string) {
 		t.Result = inputValue
-		modal.textView.SetText(argDisplayText(inputValue))
+		modal.SetText("$ " + snippetPreviewText(inputValue))
 	})
 	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 		if buttonLabel == "Cancel" || buttonIndex == -1 {
