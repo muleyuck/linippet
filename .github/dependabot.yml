@@ -21,10 +21,15 @@ updates:
     directory: / # Location of go.mod
     assignees:
       - muleyuck
+    cooldown:
+      semver-major-days: 14
+      semver-minor-days: 7
+      semver-patch-days: 2
     groups:
-      dependencies:
+      tui-dependencies:
         patterns:
-          - "*"
+          - "github.com/gdamore/tcell*"
+          - "github.com/rivo/tview*"
     schedule:
       interval: weekly
       day: saturday
