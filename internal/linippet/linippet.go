@@ -95,7 +95,7 @@ func writeLinippets(linippets Linippets) (err error) {
 			err = deferErr
 		}
 	}()
-	out, err := json.Marshal(&linippets)
+	out, err := json.MarshalIndent(&linippets, "", "  ")
 	if err != nil {
 		return err
 	}
