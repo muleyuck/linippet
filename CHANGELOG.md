@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/muleyuck/linippet/compare/v0.4.0...v0.5.0) (2026-06-27)
+
+
+### Features
+
+* write JSON with indented formatting ([acf8b3d](https://github.com/muleyuck/linippet/commit/acf8b3d0364eea49d1c141bc941e10be938a7d06))
+* write JSON with indented formatting ([b64ba6d](https://github.com/muleyuck/linippet/commit/b64ba6d610ba192b2f22f81219cf2cfbdd5f2732))
+
 ## [0.4.0](https://github.com/muleyuck/linippet/compare/v0.3.1...v0.4.0) (2026-04-11)
 
 
