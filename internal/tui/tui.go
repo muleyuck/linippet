@@ -8,13 +8,13 @@ import (
 	"github.com/muleyuck/linippet/internal/fuzzy_search"
 	"github.com/muleyuck/linippet/internal/linippet"
 	"github.com/muleyuck/linippet/internal/snippet"
-	"github.com/rivo/tview"
+	"github.com/muleyuck/linippet/internal/tui/widget"
 )
 
 const FOCUS_LABEL = "> "
 
 type tui struct {
-	app          *tview.Application
+	app          *widget.App
 	Result       string
 	linippetArgs []string
 	Submit       bool
@@ -22,17 +22,17 @@ type tui struct {
 
 type OnlyModalTui struct {
 	*tui
-	modal *Modal
+	modal *widget.Modal
 }
 
 func NewCreateTui() *OnlyModalTui {
-	app := tview.NewApplication()
-	modal := NewModal().
+	app := widget.NewApp()
+	modal := widget.NewModal().
 		AddInputFields([]string{""}, nil).
 		AddTextView("Syntax: ${{name}} or ${{name:default}}").
 		AddButtons([]string{"OK", "Cancel"}).
 		SetText("$ ")
-	app.SetRoot(modal, true)
+	app.SetRoot(modal)
 	return &OnlyModalTui{
 		tui:   &tui{app: app},
 		modal: modal,
@@ -63,6 +63,7 @@ func (t *OnlyModalTui) SetAction() {
 }
 
 func (t *OnlyModalTui) StartApp() error {
+	t.app.SetFocus(t.modal)
 	if err := t.app.Run(); err != nil {
 		t.app.Stop()
 		return err
@@ -72,11 +73,11 @@ func (t *OnlyModalTui) StartApp() error {
 
 type listModalTui struct {
 	*tui
-	flex         *tview.Flex
-	input        *tview.InputField
-	list         *List
+	layout       *widget.VerticalLayout
+	input        *widget.InputField
+	list         *widget.List
 	linippets    linippet.Linippets
-	modalFunc    func(string) *Modal
+	modalFunc    func(string) *widget.Modal
 	SelectId     string
 	searchCancel context.CancelFunc
 }
@@ -100,33 +101,32 @@ func NewRemoveTui() *listModalTui {
 }
 
 func newListModalTui() *listModalTui {
-	app := tview.NewApplication()
+	app := widget.NewApp()
 
-	input := tview.NewInputField()
-	input.SetLabel(FOCUS_LABEL)
-	input.SetLabelStyle(tcell.StyleDefault.Background(tcell.ColorDefault).Foreground(tcell.ColorDefault).Bold(true))
-	input.SetFieldStyle(tcell.StyleDefault.Background(tcell.ColorDefault).Foreground(tcell.ColorDefault))
-	input.SetAcceptanceFunc(tview.InputFieldMaxLength(200)).SetFieldWidth(0)
+	input := widget.NewInputField().
+		SetLabel(FOCUS_LABEL).
+		SetLabelStyle(tcell.StyleDefault.Background(tcell.ColorDefault).Foreground(tcell.ColorDefault).Bold(true)).
+		SetFieldStyle(tcell.StyleDefault.Background(tcell.ColorDefault).Foreground(tcell.ColorDefault)).
+		SetMaxLength(200)
 
-	list := NewList()
-	list.SetLabel(FOCUS_LABEL)
+	list := widget.NewList().
+		SetLabel(FOCUS_LABEL).
+		SetHighlightFullLine(true).
+		SetSelectedStyle(tcell.StyleDefault.Background(tcell.ColorGray).Foreground(tcell.ColorDefault).Bold(true)).
+		SetMainTextStyle(tcell.StyleDefault.Background(tcell.ColorDefault).Foreground(tcell.ColorDefault))
 	list.SetBackgroundColor(tcell.ColorDefault)
 	list.SetBorder(true)
-	list.SetHighlightFullLine(true)
-	list.SetSelectedStyle(tcell.StyleDefault.Background(tcell.ColorGray).Foreground(tcell.ColorDefault).Bold(true))
-	list.SetMainTextStyle(tcell.StyleDefault.Background(tcell.ColorDefault).Foreground(tcell.ColorDefault))
 
-	flex := tview.NewFlex()
-	flex.SetDirection(tview.FlexRow)
-	flex.AddItem(input, 1, 0, true)
-	flex.AddItem(list, 0, 1, false)
+	layout := widget.NewVerticalLayout().
+		AddItem(input, 1).
+		AddItem(list, 0)
 
-	app.SetRoot(flex, true).SetFocus(input)
+	app.SetRoot(layout)
 	return &listModalTui{
-		tui:   &tui{app: app},
-		flex:  flex,
-		list:  list,
-		input: input,
+		tui:    &tui{app: app},
+		layout: layout,
+		list:   list,
+		input:  input,
 	}
 }
 
@@ -152,8 +152,7 @@ func (t *listModalTui) SetAction() {
 				t.app.Stop()
 				return nil
 			}
-			t.input.Blur()
-			t.flex.AddItem(modal, 0, 0, true)
+			t.layout.ShowOverlay(modal)
 			t.app.SetFocus(modal)
 			return nil
 		}
@@ -170,7 +169,7 @@ func (t *listModalTui) SetAction() {
 			for _, linippet := range t.linippets {
 				t.addItem(linippet.Snippet, linippet.Id, nil)
 			}
-			t.list.SetTitle(fmt.Sprintf(" %d/%d ", len(t.linippets), len(t.linippets))).SetTitleAlign(tview.AlignLeft)
+			t.list.SetTitle(fmt.Sprintf(" %d/%d ", len(t.linippets), len(t.linippets)))
 			return
 		}
 
@@ -189,13 +188,14 @@ func (t *listModalTui) SetAction() {
 				for _, result := range sorted {
 					t.addItem(result.Linippet.Snippet, result.Linippet.Id, result.Matches)
 				}
-				t.list.SetTitle(fmt.Sprintf(" %d/%d ", len(sorted), len(t.linippets))).SetTitleAlign(tview.AlignLeft)
+				t.list.SetTitle(fmt.Sprintf(" %d/%d ", len(sorted), len(t.linippets)))
 			})
 		}()
 	})
 }
 
 func (t *listModalTui) StartApp() error {
+	t.app.SetFocus(t.input)
 	if err := t.app.Run(); err != nil {
 		t.app.Stop()
 		return err
@@ -222,12 +222,11 @@ func (t *listModalTui) offsetItem(offset int) {
 }
 
 func (t *listModalTui) addItem(mainText string, secondaryText string, matchIndices []int) {
-	t.list.AddItem(mainText, secondaryText, 0, nil, matchIndices).ShowSecondaryText(false)
+	t.list.AddItem(mainText, secondaryText, matchIndices)
 }
 
 func (t *listModalTui) LazyLoadLinippet() {
 	go func() {
-		// time.Sleep(1 * time.Second)
 		linippets, err := linippet.ReadLinippets()
 		if err != nil {
 			panic(err)
@@ -236,13 +235,18 @@ func (t *listModalTui) LazyLoadLinippet() {
 			for _, linippet := range linippets {
 				t.addItem(linippet.Snippet, linippet.Id, nil)
 			}
-			t.list.SetTitle(fmt.Sprintf(" %d/%d ", len(linippets), len(linippets))).SetTitleAlign(tview.AlignLeft)
+			t.list.SetTitle(fmt.Sprintf(" %d/%d ", len(linippets), len(linippets)))
 		})
 		t.linippets = linippets
 	}()
 }
 
-func (t *listModalTui) setRootModal(currentText string) *Modal {
+func (t *listModalTui) closeModal() {
+	t.layout.RemoveOverlay()
+	t.app.SetFocus(t.input)
+}
+
+func (t *listModalTui) setRootModal(currentText string) *widget.Modal {
 	args := snippet.ExtractSnippetArgsWithDefaults(currentText)
 	if len(args) == 0 {
 		t.Result = currentText
@@ -254,14 +258,13 @@ func (t *listModalTui) setRootModal(currentText string) *Modal {
 		argNames[i] = arg.Name
 		t.linippetArgs[i] = arg.Default
 	}
-	modal := NewModal().
+	modal := widget.NewModal().
 		AddInputFields(argNames, t.linippetArgs).
 		AddButtons([]string{"OK", "Cancel"}).
 		SetText("$ " + snippetPreviewText(currentText))
 	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 		if buttonLabel == "Cancel" || buttonIndex == -1 {
-			t.flex.RemoveItem(modal)
-			t.app.SetFocus(t.input)
+			t.closeModal()
 		} else if buttonLabel == "OK" {
 			result, err := snippet.ReplaceSnippet(currentText, t.linippetArgs)
 			if err != nil {
@@ -283,8 +286,7 @@ func (t *listModalTui) setRootModal(currentText string) *Modal {
 	modal.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyCtrlQ:
-			t.flex.RemoveItem(modal)
-			t.app.SetFocus(t.input)
+			t.closeModal()
 			return nil
 		}
 		return event
@@ -313,8 +315,8 @@ func snippetPreviewText(snippetText string) string {
 	return result
 }
 
-func (t *listModalTui) setEditModal(currentText string) *Modal {
-	modal := NewModal().
+func (t *listModalTui) setEditModal(currentText string) *widget.Modal {
+	modal := widget.NewModal().
 		AddInputFields([]string{""}, []string{currentText}).
 		AddTextView("Syntax: ${{name}} or ${{name:default}}").
 		AddButtons([]string{"OK", "Cancel"}).
@@ -327,8 +329,7 @@ func (t *listModalTui) setEditModal(currentText string) *Modal {
 	})
 	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 		if buttonLabel == "Cancel" || buttonIndex == -1 {
-			t.flex.RemoveItem(modal)
-			t.app.SetFocus(t.input)
+			t.closeModal()
 		} else if buttonLabel == "OK" {
 			t.Submit = true
 			t.app.Stop()
@@ -337,8 +338,7 @@ func (t *listModalTui) setEditModal(currentText string) *Modal {
 	modal.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyCtrlQ:
-			t.flex.RemoveItem(modal)
-			t.app.SetFocus(t.input)
+			t.closeModal()
 			return nil
 		}
 		return event
@@ -347,15 +347,14 @@ func (t *listModalTui) setEditModal(currentText string) *Modal {
 	return modal
 }
 
-func (t *listModalTui) setRemoveModal(currentText string) *Modal {
-	modal := NewModal().
+func (t *listModalTui) setRemoveModal(currentText string) *widget.Modal {
+	modal := widget.NewModal().
 		AddButtons([]string{"OK", "Cancel"}).
 		SetText("Remove the following snippet?\n\n" + currentText + "\n")
 
 	modal.SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 		if buttonLabel == "Cancel" || buttonIndex == -1 {
-			t.flex.RemoveItem(modal)
-			t.app.SetFocus(t.input)
+			t.closeModal()
 		} else if buttonLabel == "OK" {
 			t.Submit = true
 			t.app.Stop()
@@ -364,8 +363,7 @@ func (t *listModalTui) setRemoveModal(currentText string) *Modal {
 	modal.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
 		switch event.Key() {
 		case tcell.KeyCtrlQ:
-			t.flex.RemoveItem(modal)
-			t.app.SetFocus(t.input)
+			t.closeModal()
 			return nil
 		}
 		return event
