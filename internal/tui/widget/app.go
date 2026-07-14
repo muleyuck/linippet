@@ -123,7 +123,7 @@ func (a *App) Run() error {
 			switch event := event.(type) {
 			case *tcell.EventKey:
 				if a.focus != nil {
-					a.focus.HandleKey(event, a.SetFocus)
+					a.focus.HandleKey(event)
 				}
 			case *tcell.EventResize:
 				screen.Sync()

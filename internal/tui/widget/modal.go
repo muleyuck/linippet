@@ -111,12 +111,12 @@ func (m *Modal) Blur() { m.form.Blur() }
 
 func (m *Modal) HasFocus() bool { return m.form.HasFocus() }
 
-func (m *Modal) HandleKey(event *tcell.EventKey, setFocus func(Primitive)) {
+func (m *Modal) HandleKey(event *tcell.EventKey) {
 	event = m.ApplyInputCapture(event)
 	if event == nil {
 		return
 	}
-	m.form.HandleKey(event, setFocus)
+	m.form.HandleKey(event)
 }
 
 func (m *Modal) Draw(screen tcell.Screen) {

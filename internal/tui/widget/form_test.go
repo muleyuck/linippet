@@ -29,17 +29,17 @@ func TestFormFocusStartsAtFirstItem(t *testing.T) {
 func TestFormTabCyclesSkippingTextLine(t *testing.T) {
 	form, first, second := newTestForm()
 	form.Focus()
-	form.HandleKey(key(tcell.KeyTab), nil)
+	form.HandleKey(key(tcell.KeyTab))
 	if !second.HasFocus() {
 		t.Fatal("Tab should move focus to the second field, skipping the TextLine")
 	}
-	form.HandleKey(key(tcell.KeyTab), nil) // -> OK
-	form.HandleKey(key(tcell.KeyTab), nil) // -> Cancel
-	form.HandleKey(key(tcell.KeyTab), nil) // wraps -> first
+	form.HandleKey(key(tcell.KeyTab)) // -> OK
+	form.HandleKey(key(tcell.KeyTab)) // -> Cancel
+	form.HandleKey(key(tcell.KeyTab)) // wraps -> first
 	if !first.HasFocus() {
 		t.Error("Tab should wrap around to the first field")
 	}
-	form.HandleKey(key(tcell.KeyBacktab), nil) // back to Cancel
+	form.HandleKey(key(tcell.KeyBacktab)) // back to Cancel
 	if !form.GetButton(1).HasFocus() {
 		t.Error("Backtab should wrap back to the last button")
 	}
@@ -48,7 +48,7 @@ func TestFormTabCyclesSkippingTextLine(t *testing.T) {
 func TestFormEnterOnFieldMovesToNext(t *testing.T) {
 	form, _, second := newTestForm()
 	form.Focus()
-	form.HandleKey(key(tcell.KeyEnter), nil)
+	form.HandleKey(key(tcell.KeyEnter))
 	if !second.HasFocus() {
 		t.Error("Enter on a field should move focus to the next target")
 	}
@@ -60,13 +60,13 @@ func TestFormEnterOnButtonFires(t *testing.T) {
 	form.AddButton("OK", func() { fired = "OK" })
 	form.AddButton("Cancel", func() { fired = "Cancel" })
 	form.Focus()
-	form.HandleKey(key(tcell.KeyRight), nil) // OK -> Cancel
-	form.HandleKey(key(tcell.KeyEnter), nil)
+	form.HandleKey(key(tcell.KeyRight)) // OK -> Cancel
+	form.HandleKey(key(tcell.KeyEnter))
 	if fired != "Cancel" {
 		t.Errorf("fired = %q, want %q", fired, "Cancel")
 	}
-	form.HandleKey(key(tcell.KeyLeft), nil) // Cancel -> OK
-	form.HandleKey(key(tcell.KeyEnter), nil)
+	form.HandleKey(key(tcell.KeyLeft)) // Cancel -> OK
+	form.HandleKey(key(tcell.KeyEnter))
 	if fired != "OK" {
 		t.Errorf("fired = %q, want %q", fired, "OK")
 	}
@@ -77,7 +77,7 @@ func TestFormEscapeFiresCancel(t *testing.T) {
 	form, _, _ := newTestForm()
 	form.SetCancelFunc(func() { canceled = true })
 	form.Focus()
-	form.HandleKey(key(tcell.KeyEscape), nil)
+	form.HandleKey(key(tcell.KeyEscape))
 	if !canceled {
 		t.Error("Escape should fire the cancel func")
 	}
@@ -86,9 +86,9 @@ func TestFormEscapeFiresCancel(t *testing.T) {
 func TestFormTypingGoesToFocusedField(t *testing.T) {
 	form, first, second := newTestForm()
 	form.Focus()
-	form.HandleKey(runeKey('a'), nil)
-	form.HandleKey(key(tcell.KeyTab), nil)
-	form.HandleKey(runeKey('b'), nil)
+	form.HandleKey(runeKey('a'))
+	form.HandleKey(key(tcell.KeyTab))
+	form.HandleKey(runeKey('b'))
 	if first.GetText() != "a" || second.GetText() != "b" {
 		t.Errorf("texts = %q, %q; want %q, %q", first.GetText(), second.GetText(), "a", "b")
 	}

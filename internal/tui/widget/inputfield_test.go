@@ -8,7 +8,7 @@ import (
 
 func typeKeys(input *InputField, keys ...*tcell.EventKey) {
 	for _, key := range keys {
-		input.HandleKey(key, nil)
+		input.HandleKey(key)
 	}
 }
 

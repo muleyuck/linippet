@@ -127,7 +127,7 @@ func (f *Form) shiftFocus(offset int) {
 	targets[f.focusedIndex].Focus()
 }
 
-func (f *Form) HandleKey(event *tcell.EventKey, setFocus func(Primitive)) {
+func (f *Form) HandleKey(event *tcell.EventKey) {
 	event = f.ApplyInputCapture(event)
 	if event == nil {
 		return
@@ -167,7 +167,7 @@ func (f *Form) HandleKey(event *tcell.EventKey, setFocus func(Primitive)) {
 			return
 		}
 	}
-	current.HandleKey(event, setFocus)
+	current.HandleKey(event)
 }
 
 func (f *Form) Draw(screen tcell.Screen) {

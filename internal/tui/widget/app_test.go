@@ -13,7 +13,7 @@ type keyRecorder struct {
 	keys []tcell.Key
 }
 
-func (r *keyRecorder) HandleKey(event *tcell.EventKey, _ func(Primitive)) {
+func (r *keyRecorder) HandleKey(event *tcell.EventKey) {
 	r.keys = append(r.keys, event.Key())
 }
 

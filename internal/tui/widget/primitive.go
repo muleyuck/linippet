@@ -12,9 +12,8 @@ type Primitive interface {
 	SetRect(x, y, width, height int)
 	// GetRect returns the position and size of the primitive.
 	GetRect() (x, y, width, height int)
-	// HandleKey processes a key event. Implementations may call setFocus to
-	// move the application focus to another primitive.
-	HandleKey(event *tcell.EventKey, setFocus func(Primitive))
+	// HandleKey processes a key event.
+	HandleKey(event *tcell.EventKey)
 	// Focus marks the primitive as having keyboard focus.
 	Focus()
 	// Blur removes keyboard focus from the primitive.

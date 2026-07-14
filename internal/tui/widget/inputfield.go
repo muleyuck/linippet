@@ -143,7 +143,7 @@ func (i *InputField) Draw(screen tcell.Screen) {
 	}
 }
 
-func (i *InputField) HandleKey(event *tcell.EventKey, _ func(Primitive)) {
+func (i *InputField) HandleKey(event *tcell.EventKey) {
 	event = i.ApplyInputCapture(event)
 	if event == nil {
 		return

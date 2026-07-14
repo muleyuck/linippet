@@ -52,7 +52,7 @@ func (b *Button) Draw(screen tcell.Screen) {
 	DrawText(screen, x+max((width-labelWidth)/2, 0), y, width, b.label, style)
 }
 
-func (b *Button) HandleKey(event *tcell.EventKey, _ func(Primitive)) {
+func (b *Button) HandleKey(event *tcell.EventKey) {
 	event = b.ApplyInputCapture(event)
 	if event == nil {
 		return

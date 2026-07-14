@@ -9,7 +9,7 @@ import (
 func TestButtonEnterFiresSelected(t *testing.T) {
 	fired := false
 	button := NewButton("OK").SetSelectedFunc(func() { fired = true })
-	button.HandleKey(key(tcell.KeyEnter), nil)
+	button.HandleKey(key(tcell.KeyEnter))
 	if !fired {
 		t.Error("Enter should fire the selected func")
 	}

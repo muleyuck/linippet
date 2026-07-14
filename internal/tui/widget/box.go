@@ -95,7 +95,7 @@ func (b *Box) Draw(screen tcell.Screen) {
 	}
 }
 
-func (b *Box) HandleKey(_ *tcell.EventKey, _ func(Primitive)) {}
+func (b *Box) HandleKey(_ *tcell.EventKey) {}
 
 func (b *Box) Focus() { b.focused = true }
 

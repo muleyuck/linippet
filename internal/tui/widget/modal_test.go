@@ -15,8 +15,8 @@ func TestModalDoneFiredByButtons(t *testing.T) {
 			gotIndex, gotLabel = buttonIndex, buttonLabel
 		})
 	modal.Focus()
-	modal.HandleKey(key(tcell.KeyRight), nil) // OK -> Cancel
-	modal.HandleKey(key(tcell.KeyEnter), nil)
+	modal.HandleKey(key(tcell.KeyRight)) // OK -> Cancel
+	modal.HandleKey(key(tcell.KeyEnter))
 	if gotIndex != 1 || gotLabel != "Cancel" {
 		t.Errorf("done = (%d, %q), want (1, Cancel)", gotIndex, gotLabel)
 	}
@@ -28,7 +28,7 @@ func TestModalEscapeFiresDoneWithMinusOne(t *testing.T) {
 		AddButtons([]string{"OK"}).
 		SetDoneFunc(func(buttonIndex int, _ string) { gotIndex = buttonIndex })
 	modal.Focus()
-	modal.HandleKey(key(tcell.KeyEscape), nil)
+	modal.HandleKey(key(tcell.KeyEscape))
 	if gotIndex != -1 {
 		t.Errorf("done index = %d, want -1", gotIndex)
 	}
@@ -44,8 +44,8 @@ func TestModalChangedFuncReceivesInputIndex(t *testing.T) {
 			gotIndex, gotValue = inputIndex, inputValue
 		})
 	modal.Focus()
-	modal.HandleKey(key(tcell.KeyTab), nil) // -> second field
-	modal.HandleKey(runeKey('x'), nil)
+	modal.HandleKey(key(tcell.KeyTab)) // -> second field
+	modal.HandleKey(runeKey('x'))
 	if gotIndex != 1 || gotValue != "x" {
 		t.Errorf("changed = (%d, %q), want (1, x)", gotIndex, gotValue)
 	}
@@ -58,7 +58,7 @@ func TestModalDefaultTextsAndSelectAllReplace(t *testing.T) {
 		AddButtons([]string{"OK"}).
 		SetChangedFunc(func(_ int, inputValue string) { gotValue = inputValue })
 	modal.Focus() // field gets focus -> selects all
-	modal.HandleKey(runeKey('x'), nil)
+	modal.HandleKey(runeKey('x'))
 	if gotValue != "x" {
 		t.Errorf("value = %q, want %q (typing replaces the default)", gotValue, "x")
 	}
@@ -69,11 +69,11 @@ func TestModalCtrlNavigationConversions(t *testing.T) {
 		AddInputFields([]string{"a", "b"}, nil).
 		AddButtons([]string{"OK"})
 	modal.Focus()
-	modal.HandleKey(key(tcell.KeyCtrlN), nil) // -> field b (converted to Tab)
-	modal.HandleKey(runeKey('z'), nil)
+	modal.HandleKey(key(tcell.KeyCtrlN)) // -> field b (converted to Tab)
+	modal.HandleKey(runeKey('z'))
 	var got string
 	modal.SetChangedFunc(func(_ int, v string) { got = v })
-	modal.HandleKey(runeKey('!'), nil)
+	modal.HandleKey(runeKey('!'))
 	if got != "z!" {
 		t.Errorf("second field text = %q, want %q", got, "z!")
 	}
