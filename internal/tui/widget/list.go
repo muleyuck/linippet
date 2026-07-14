@@ -87,7 +87,9 @@ func (l *List) GetItemText(index int) (main, secondary string) {
 	return l.items[index].mainText, l.items[index].secondaryText
 }
 
-func (l *List) GetCurrentItem() int { return l.currentItem }
+func (l *List) GetCurrentItem() int {
+	return l.currentItem
+}
 
 // SetCurrentItem sets the selected item, clamping out-of-range indices.
 func (l *List) SetCurrentItem(index int) *List {

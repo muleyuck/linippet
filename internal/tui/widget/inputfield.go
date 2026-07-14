@@ -88,7 +88,9 @@ func (i *InputField) GetText() string {
 }
 
 // Focusable implements FormItem.
-func (i *InputField) Focusable() bool { return true }
+func (i *InputField) Focusable() bool {
+	return true
+}
 
 func (i *InputField) LabelWidth() int {
 	return max(i.labelWidth, StringWidth(i.label))

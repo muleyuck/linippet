@@ -15,7 +15,9 @@ func NewTextLine(text string) *TextLine {
 }
 
 // Focusable implements FormItem.
-func (t *TextLine) Focusable() bool { return false }
+func (t *TextLine) Focusable() bool {
+	return false
+}
 
 func (t *TextLine) Draw(screen tcell.Screen) {
 	t.Box.Draw(screen)

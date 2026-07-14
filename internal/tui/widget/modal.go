@@ -105,9 +105,13 @@ func (m *Modal) SetDoneFunc(handler func(buttonIndex int, buttonLabel string)) *
 	return m
 }
 
-func (m *Modal) Focus() { m.form.Focus() }
+func (m *Modal) Focus() {
+	m.form.Focus()
+}
 
-func (m *Modal) Blur() { m.form.Blur() }
+func (m *Modal) Blur() {
+	m.form.Blur()
+}
 
 func (m *Modal) HasFocus() bool { return m.form.HasFocus() }
 

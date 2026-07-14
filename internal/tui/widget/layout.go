@@ -27,9 +27,13 @@ func (v *VerticalLayout) AddItem(p Primitive, height int) *VerticalLayout {
 
 // ShowOverlay draws p on top of the layout until RemoveOverlay is called.
 // The overlay is responsible for its own position and size.
-func (v *VerticalLayout) ShowOverlay(p Primitive) { v.overlay = p }
+func (v *VerticalLayout) ShowOverlay(p Primitive) {
+	v.overlay = p
+}
 
-func (v *VerticalLayout) RemoveOverlay() { v.overlay = nil }
+func (v *VerticalLayout) RemoveOverlay() {
+	v.overlay = nil
+}
 
 func (v *VerticalLayout) SetRect(x, y, width, height int) {
 	v.Box.SetRect(x, y, width, height)

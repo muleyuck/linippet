@@ -97,8 +97,14 @@ func (b *Box) Draw(screen tcell.Screen) {
 
 func (b *Box) HandleKey(_ *tcell.EventKey) {}
 
-func (b *Box) Focus() { b.focused = true }
+func (b *Box) Focus() {
+	b.focused = true
+}
 
-func (b *Box) Blur() { b.focused = false }
+func (b *Box) Blur() {
+	b.focused = false
+}
 
-func (b *Box) HasFocus() bool { return b.focused }
+func (b *Box) HasFocus() bool {
+	return b.focused
+}

@@ -43,9 +43,13 @@ func (f *Form) AddButton(label string, selected func()) *Form {
 	return f
 }
 
-func (f *Form) GetButton(index int) *Button { return f.buttons[index] }
+func (f *Form) GetButton(index int) *Button {
+	return f.buttons[index]
+}
 
-func (f *Form) GetButtonCount() int { return len(f.buttons) }
+func (f *Form) GetButtonCount() int {
+	return len(f.buttons)
+}
 
 // SetCancelFunc sets the handler fired when the user presses Escape.
 func (f *Form) SetCancelFunc(cancel func()) *Form {
