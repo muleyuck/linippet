@@ -178,13 +178,17 @@ func (f *Form) Draw(screen tcell.Screen) {
 	f.Box.Draw(screen)
 	x, y, width, _ := f.GetInnerRect()
 
-	// Align field labels.
+	// Align field labels, reserving one column so the field never touches
+	// the label even when every label is empty. Measured from each field's
+	// own label text, not LabelWidth(), which would reflect the alignment
+	// width set below on a previous Draw and grow without bound.
 	maxLabelWidth := 0
 	for _, item := range f.items {
 		if input, ok := item.(*InputField); ok {
-			maxLabelWidth = max(maxLabelWidth, input.LabelWidth())
+			maxLabelWidth = max(maxLabelWidth, StringWidth(input.label))
 		}
 	}
+	maxLabelWidth++
 
 	row := y
 	for _, item := range f.items {
