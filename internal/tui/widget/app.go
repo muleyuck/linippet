@@ -122,6 +122,10 @@ func (a *App) Run() error {
 			}
 			switch event := event.(type) {
 			case *tcell.EventKey:
+				if event.Key() == tcell.KeyCtrlC {
+					a.Stop()
+					break
+				}
 				if a.focus != nil {
 					a.focus.HandleKey(event)
 				}

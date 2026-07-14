@@ -66,6 +66,26 @@ func TestAppDispatchesKeysToFocusedPrimitive(t *testing.T) {
 	}
 }
 
+func TestAppCtrlCStopsApp(t *testing.T) {
+	recorder := &keyRecorder{Box: NewBox()}
+	app, screen, done := startApp(t, recorder)
+	app.SetFocus(recorder)
+
+	screen.InjectKey(tcell.KeyCtrlC, 0, tcell.ModNone)
+
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(time.Second):
+		t.Fatal("Ctrl+C did not stop the app")
+	}
+	if len(recorder.keys) != 0 {
+		t.Errorf("recorded keys = %v, want none (Ctrl+C must not reach the focused primitive)", recorder.keys)
+	}
+}
+
 func TestAppQueueUpdateDrawBeforeRun(t *testing.T) {
 	screen := newTestScreen(t)
 	app := NewApp()
