@@ -49,6 +49,15 @@ func TestInputFieldCursorEditing(t *testing.T) {
 	}
 }
 
+func TestInputFieldCtrlHDeletesLikeBackspace(t *testing.T) {
+	input := NewInputField()
+	typeString(input, "abc")
+	typeKeys(input, key(tcell.KeyCtrlH)) // ab
+	if got := input.GetText(); got != "ab" {
+		t.Errorf("text = %q, want %q", got, "ab")
+	}
+}
+
 func TestInputFieldLineEditingKeys(t *testing.T) {
 	input := NewInputField()
 	typeString(input, "echo hello world")
