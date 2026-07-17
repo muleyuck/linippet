@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.5.0](https://github.com/muleyuck/linippet/compare/v0.4.0...v0.5.0) (2026-07-17)
+
+
+### Features
+
+* replace tview with an in-house tcell widget layer for the TUI ([#50](https://github.com/muleyuck/linippet/issues/50)) ([83ef984](https://github.com/muleyuck/linippet/commit/83ef984229ef8efe45318ae35b183e7209cf33f7))
+* write JSON with indented formatting ([acf8b3d](https://github.com/muleyuck/linippet/commit/acf8b3d0364eea49d1c141bc941e10be938a7d06))
+* write JSON with indented formatting ([b64ba6d](https://github.com/muleyuck/linippet/commit/b64ba6d610ba192b2f22f81219cf2cfbdd5f2732))
+
+
+### Bug Fixes
+
+* handle Ctrl+H as backspace in input field ([#51](https://github.com/muleyuck/linippet/pull/51)) ([90b6c15](https://github.com/muleyuck/linippet/commit/90b6c150460e497d65f036578c5d1733c26a7282))
+
 ## [0.4.0](https://github.com/muleyuck/linippet/compare/v0.3.1...v0.4.0) (2026-04-11)
 
 
