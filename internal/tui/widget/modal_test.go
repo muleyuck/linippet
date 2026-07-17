@@ -96,7 +96,8 @@ func TestModalDrawCentersItself(t *testing.T) {
 		t.Errorf("modal pos = (%d,%d), want centered (25,8)", x, y)
 	}
 	// Border must be drawn at the modal corner.
-	mainc, _, _, _ := screen.GetContent(x, y)
+	s, _, _ := screen.Get(x, y)
+	mainc := []rune(s)[0]
 	if mainc != tcell.RuneULCorner {
 		t.Errorf("corner rune = %q", mainc)
 	}

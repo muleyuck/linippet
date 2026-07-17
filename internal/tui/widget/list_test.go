@@ -64,12 +64,12 @@ func TestListDrawHighlightsMatchedBytes(t *testing.T) {
 	list.SetRect(0, 0, 40, 10)
 	list.Draw(screen)
 
-	_, _, styleA, _ := screen.GetContent(0, 0)
+	_, styleA, _ := screen.Get(0, 0)
 	fgA, _, _ := styleA.Decompose()
 	if fgA != tcell.ColorGreen {
 		t.Errorf("matched cell fg = %v, want green", fgA)
 	}
-	_, _, styleB, _ := screen.GetContent(1, 0)
+	_, styleB, _ := screen.Get(1, 0)
 	fgB, _, _ := styleB.Decompose()
 	if fgB == tcell.ColorGreen {
 		t.Error("unmatched cell must not be green")
@@ -101,7 +101,7 @@ func TestListHighlightFullLine(t *testing.T) {
 	list.AddItem("x", "", nil)
 	list.SetRect(0, 0, 10, 3)
 	list.Draw(screen)
-	_, _, style, _ := screen.GetContent(9, 0) // rightmost cell of the row
+	_, style, _ := screen.Get(9, 0) // rightmost cell of the row
 	_, bg, _ := style.Decompose()
 	if bg != tcell.ColorGray {
 		t.Errorf("full-line highlight bg = %v, want gray", bg)

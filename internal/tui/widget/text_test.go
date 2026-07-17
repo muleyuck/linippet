@@ -23,10 +23,8 @@ func newTestScreen(t *testing.T) tcell.SimulationScreen {
 func screenLine(screen tcell.SimulationScreen, y, width int) string {
 	var b strings.Builder
 	for x := range width {
-		mainc, _, _, _ := screen.GetContent(x, y)
-		if mainc == 0 {
-			continue // continuation cell of a wide rune
-		}
+		s, _, _ := screen.Get(x, y)
+		mainc := []rune(s)[0]
 		b.WriteRune(mainc)
 	}
 	return strings.TrimRight(b.String(), " ")

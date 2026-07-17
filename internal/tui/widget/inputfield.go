@@ -179,7 +179,7 @@ func (i *InputField) HandleKey(event *tcell.EventKey) {
 	case tcell.KeyEnd, tcell.KeyCtrlE:
 		i.selectAll = false
 		i.cursor = len(i.text)
-	case tcell.KeyBackspace, tcell.KeyBackspace2:
+	case tcell.KeyBackspace, tcell.KeyBackspace2, tcell.KeyCtrlH:
 		if i.selectAll {
 			i.text, i.cursor, i.selectAll = nil, 0, false
 		} else if i.cursor > 0 {

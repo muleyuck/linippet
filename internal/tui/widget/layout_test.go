@@ -28,14 +28,16 @@ func TestVerticalLayoutOverlayIsDrawnOnTop(t *testing.T) {
 	layout.Draw(screen)
 
 	// Overlay border must be visible over the base box.
-	mainc, _, _, _ := screen.GetContent(10, 5)
+	s, _, _ := screen.Get(10, 5)
+	mainc := []rune(s)[0]
 	if mainc != '┌' {
 		t.Errorf("overlay corner = %q, want ┌", mainc)
 	}
 
 	layout.RemoveOverlay()
 	layout.Draw(screen)
-	mainc, _, _, _ = screen.GetContent(10, 5)
+	s, _, _ = screen.Get(10, 5)
+	mainc = []rune(s)[0]
 	if mainc != ' ' {
 		t.Errorf("after RemoveOverlay, cell = %q, want space", mainc)
 	}

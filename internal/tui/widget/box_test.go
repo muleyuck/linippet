@@ -16,11 +16,13 @@ func TestBoxDrawBorderAndTitle(t *testing.T) {
 	box.SetRect(0, 0, 20, 5)
 	box.Draw(screen)
 
-	mainc, _, _, _ := screen.GetContent(0, 0)
+	s, _, _ := screen.Get(0, 0)
+	mainc := []rune(s)[0]
 	if mainc != tcell.RuneULCorner {
 		t.Errorf("top-left = %q, want %q", mainc, tcell.RuneULCorner)
 	}
-	mainc, _, _, _ = screen.GetContent(19, 4)
+	s, _, _ = screen.Get(19, 4)
+	mainc = []rune(s)[0]
 	if mainc != tcell.RuneLRCorner {
 		t.Errorf("bottom-right = %q, want %q", mainc, tcell.RuneLRCorner)
 	}
