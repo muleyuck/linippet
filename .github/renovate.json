@@ -33,12 +33,12 @@
     { "matchManagers": ["gomod"], "matchDepTypes": ["indirect"], "matchUpdateTypes": ["patch", "minor"], "automerge": true },
 
     { "matchManagers": ["gomod"], "matchDepNames": ["go"], "matchDepTypes": ["golang"], "rangeStrategy": "bump", "groupName": "go toolchain", "automerge": false },
-    { "matchManagers": ["mise"], "matchPackageNames": ["go"], "groupName": "go toolchain", "automerge": false },
-    { "matchManagers": ["mise"], "matchPackageNames": ["go"], "matchUpdateTypes": ["major"], "enabled": false },
+    { "matchManagers": ["mise"], "matchDepNames": ["go"], "groupName": "go toolchain", "automerge": false },
+    { "matchManagers": ["mise"], "matchDepNames": ["go"], "matchUpdateTypes": ["major"], "enabled": false },
 
     { "matchManagers": ["mise", "custom.regex"], "matchDepNames": ["golangci-lint"], "groupName": "golangci-lint", "matchUpdateTypes": ["patch", "minor"], "automerge": true },
 
-    { "matchManagers": ["mise"], "matchPackageNames": ["go:github.com/spf13/cobra-cli", "prek"], "matchUpdateTypes": ["patch", "minor"], "automerge": true },
+    { "matchManagers": ["mise"], "matchDepNames": ["go:github.com/spf13/cobra-cli", "prek"], "matchUpdateTypes": ["patch", "minor"], "automerge": true },
 
     { "matchUpdateTypes": ["lockFileMaintenance"], "automerge": false }
   ]
