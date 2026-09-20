@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.1](https://github.com/muleyuck/linippet/compare/v0.5.0...v0.5.1) (2026-09-20)
+
+
+### Bug Fixes
+
+* correct stale version comment on golangci-lint-action pin ([#62](https://github.com/muleyuck/linippet/issues/62)) ([ac0bb18](https://github.com/muleyuck/linippet/commit/ac0bb18fdb18a49deb5db3c5db7f4f755d08e1f6))
+
 ## [0.5.0](https://github.com/muleyuck/linippet/compare/v0.4.0...v0.5.0) (2026-07-17)
 
 
