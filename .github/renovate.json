@@ -1,0 +1,45 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "timezone": "Asia/Tokyo",
+  "schedule": ["on saturday"],
+  "reviewers": ["muleyuck"],
+  "prConcurrentLimit": 10,
+  "semanticCommits": "enabled",
+  "automergeType": "pr",
+  "automergeStrategy": "squash",
+  "dependencyDashboard": true,
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["on saturday"]
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^\\.github/workflows/unit-test\\.yml$/"],
+      "matchStrings": ["# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?) packageName=(?<packageName>.*?)\\s*\\n\\s*version:\\s*v?(?<currentValue>[\\w.-]+)"],
+      "versioningTemplate": "semver"
+    }
+  ],
+  "packageRules": [
+    { "matchManagers": ["github-actions"], "groupName": "github-actions dependencies" },
+    { "matchManagers": ["github-actions"], "matchUpdateTypes": ["patch", "minor", "digest"], "automerge": true },
+
+    { "matchManagers": ["gomod"], "matchUpdateTypes": ["major"], "enabled": false },
+    { "matchManagers": ["gomod"], "matchUpdateTypes": ["minor"], "minimumReleaseAge": "7 days" },
+    { "matchManagers": ["gomod"], "matchUpdateTypes": ["patch"], "minimumReleaseAge": "2 days" },
+
+    { "matchManagers": ["gomod"], "matchPackageNames": ["github.com/gdamore/tcell/v2"], "groupName": "tui-dependencies" },
+
+    { "matchManagers": ["gomod"], "matchDepTypes": ["indirect"], "matchUpdateTypes": ["patch", "minor"], "automerge": true },
+
+    { "matchManagers": ["gomod"], "matchDepNames": ["go"], "matchDepTypes": ["golang"], "rangeStrategy": "bump", "groupName": "go toolchain", "automerge": false },
+    { "matchManagers": ["mise"], "matchPackageNames": ["go"], "groupName": "go toolchain", "automerge": false },
+    { "matchManagers": ["mise"], "matchPackageNames": ["go"], "matchUpdateTypes": ["major"], "enabled": false },
+
+    { "matchManagers": ["mise", "custom.regex"], "matchDepNames": ["golangci-lint"], "groupName": "golangci-lint", "matchUpdateTypes": ["patch", "minor"], "automerge": true },
+
+    { "matchManagers": ["mise"], "matchPackageNames": ["go:github.com/spf13/cobra-cli", "prek"], "matchUpdateTypes": ["patch", "minor"], "automerge": true },
+
+    { "matchUpdateTypes": ["lockFileMaintenance"], "automerge": false }
+  ]
+}
