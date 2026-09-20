@@ -6,24 +6,9 @@ on:
   pull_request:
     branches:
       - main
+permissions: {}
 jobs:
-  unit-test:
-    name: Lint Build Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7.0.1
-      - name: Set up Go
-        uses: actions/setup-go@v7.0.0
-        with:
-          go-version-file: go.mod
-      - name: Install dependencies
-        run: go mod tidy
-      - name: Lint
-        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
-        with:
-          # renovate: datasource=github-releases depName=golangci-lint packageName=golangci/golangci-lint
-          version: v2.13.2
-      - name: Build
-        run: go build -v ./...
-      - name: Test
-        run: go test -v ./...
+  ci:
+    permissions:
+      contents: read
+    uses: muleyuck/github-actions/.github/workflows/ci-go.yml@v1
