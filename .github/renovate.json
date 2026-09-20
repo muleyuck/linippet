@@ -16,7 +16,7 @@
     {
       "customType": "regex",
       "managerFilePatterns": ["/^\\.github/workflows/unit-test\\.yml$/"],
-      "matchStrings": ["# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\s*\\n\\s*version:\\s*v?(?<currentValue>[\\w.-]+)"],
+      "matchStrings": ["# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?) packageName=(?<packageName>.*?)\\s*\\n\\s*version:\\s*v?(?<currentValue>[\\w.-]+)"],
       "versioningTemplate": "semver"
     }
   ],
