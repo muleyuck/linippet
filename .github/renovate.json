@@ -8,6 +8,8 @@
   "automergeType": "pr",
   "automergeStrategy": "squash",
   "dependencyDashboard": true,
+  "minimumReleaseAge": "3 days",
+  "internalChecksFilter": "strict",
   "lockFileMaintenance": {
     "enabled": true,
     "schedule": ["on saturday"]
