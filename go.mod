@@ -1,6 +1,6 @@
 module github.com/muleyuck/linippet
 
-go 1.27.1
+go 1.27.2
 
 require (
 	github.com/gdamore/tcell/v2 v2.13.10
