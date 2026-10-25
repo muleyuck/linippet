@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -51,16 +53,64 @@ func typeText(screen tcell.SimulationScreen, text string) {
 	}
 }
 
-func TestRootTuiSnippetWithoutArgsReturnsImmediately(t *testing.T) {
-	target := NewRootTui()
+func startInitialQueryTui(t *testing.T, query string, beforeLoad ...*tcell.EventKey) (*listModalTui, tcell.SimulationScreen, <-chan error) {
+	t.Helper()
+	dataDir := t.TempDir()
+	t.Setenv("LINIPPET_DATA", dataDir)
+	data := []byte(`[{"id":"id-1","snippet":"ls -la"},{"id":"id-2","snippet":"echo テスト🌱"}]`)
+	if err := os.WriteFile(filepath.Join(dataDir, "linippet.json"), data, 0600); err != nil {
+		t.Fatal(err)
+	}
+	target := NewRootTui(query)
 	screen := newTestScreen(t)
 	target.app.SetScreen(screen)
 	target.SetAction()
-	setTestLinippets(target, linippet.Linippets{
-		{Id: "id-1", Snippet: "ls -la"},
-	})
+	for _, event := range beforeLoad {
+		target.input.HandleKey(event)
+	}
+	target.LazyLoadLinippet()
 	done := make(chan error, 1)
-	go func() { done <- target.StartApp() }()
+	go func() {
+		done <- target.StartApp()
+		close(done)
+	}()
+	t.Cleanup(func() {
+		target.app.QueueUpdateDraw(target.app.Stop)
+		if err := <-done; err != nil {
+			t.Error(err)
+		}
+	})
+	return target, screen, done
+}
+
+func TestRootTuiInitialQueryPreservesEditingStateWhileLoading(t *testing.T) {
+	target, screen, _ := startInitialQueryTui(t, "xテスト🌱",
+		tcell.NewEventKey(tcell.KeyHome, 0, tcell.ModNone),
+		tcell.NewEventKey(tcell.KeyDelete, 0, tcell.ModNone))
+	waitFor(t, target, func() bool { return target.list.GetItemCount() == 1 })
+	typeText(screen, "新")
+	waitFor(t, target, func() bool { return len([]rune(target.input.GetText())) == 5 })
+	target.app.QueueUpdateDraw(func() {
+		if got := target.input.GetText(); got != "新テスト🌱" {
+			t.Errorf("search after inserting at Home = %q, want 新テスト🌱", got)
+		}
+	})
+}
+
+func TestRootTuiUnmatchedInitialQueryCanBeCleared(t *testing.T) {
+	target, screen, _ := startInitialQueryTui(t, "zzz")
+	waitFor(t, target, func() bool {
+		return len(target.linippets) == 2 && target.list.GetItemCount() == 0
+	})
+	screen.InjectKey(tcell.KeyCtrlU, 0, tcell.ModNone)
+	waitFor(t, target, func() bool {
+		return target.input.GetText() == "" && target.list.GetItemCount() == 2
+	})
+}
+
+func TestRootTuiSnippetWithoutArgsReturnsImmediately(t *testing.T) {
+	target, screen, done := startInitialQueryTui(t, "")
+	waitFor(t, target, func() bool { return target.list.GetItemCount() == 2 })
 
 	screen.InjectKey(tcell.KeyEnter, 0, tcell.ModNone)
 
@@ -76,7 +126,7 @@ func TestRootTuiSnippetWithoutArgsReturnsImmediately(t *testing.T) {
 }
 
 func TestRootTuiSnippetWithArgsOpensModalAndReplaces(t *testing.T) {
-	target := NewRootTui()
+	target := NewRootTui("")
 	screen := newTestScreen(t)
 	target.app.SetScreen(screen)
 	target.SetAction()
@@ -86,10 +136,10 @@ func TestRootTuiSnippetWithArgsOpensModalAndReplaces(t *testing.T) {
 	done := make(chan error, 1)
 	go func() { done <- target.StartApp() }()
 
-	screen.InjectKey(tcell.KeyEnter, 0, tcell.ModNone) // open the arg modal
-	typeText(screen, "world")                          // fill the arg
-	screen.InjectKey(tcell.KeyEnter, 0, tcell.ModNone) // field -> OK button
-	screen.InjectKey(tcell.KeyEnter, 0, tcell.ModNone) // press OK
+	screen.InjectKey(tcell.KeyEnter, 0, tcell.ModNone)
+	typeText(screen, "world")
+	screen.InjectKey(tcell.KeyEnter, 0, tcell.ModNone)
+	screen.InjectKey(tcell.KeyEnter, 0, tcell.ModNone)
 
 	if err := <-done; err != nil {
 		t.Fatal(err)
@@ -100,7 +150,7 @@ func TestRootTuiSnippetWithArgsOpensModalAndReplaces(t *testing.T) {
 }
 
 func TestRootTuiCtrlQClosesModalAndReturnsToInput(t *testing.T) {
-	target := NewRootTui()
+	target := NewRootTui("")
 	screen := newTestScreen(t)
 	target.app.SetScreen(screen)
 	target.SetAction()
@@ -123,37 +173,28 @@ func TestRootTuiCtrlQClosesModalAndReturnsToInput(t *testing.T) {
 }
 
 func TestRootTuiFuzzyFilterNarrowsList(t *testing.T) {
-	target := NewRootTui()
-	screen := newTestScreen(t)
-	target.app.SetScreen(screen)
-	target.SetAction()
-	setTestLinippets(target, linippet.Linippets{
-		{Id: "id-1", Snippet: "echo hello"},
-		{Id: "id-2", Snippet: "ls -la"},
-	})
-	done := make(chan error, 1)
-	go func() { done <- target.StartApp() }()
+	query := "echo テスト🌱"
+	target, screen, done := startInitialQueryTui(t, query)
 
-	typeText(screen, "ls")
 	waitFor(t, target, func() bool {
 		if target.list.GetItemCount() != 1 {
 			return false
 		}
 		main, _ := target.list.GetItemText(0)
-		return main == "ls -la"
+		return main == query && target.input.GetText() == query && target.Result == ""
 	})
 
 	screen.InjectKey(tcell.KeyEnter, 0, tcell.ModNone)
 	if err := <-done; err != nil {
 		t.Fatal(err)
 	}
-	if target.Result != "ls -la" {
-		t.Errorf("Result = %q, want %q", target.Result, "ls -la")
+	if target.Result != query {
+		t.Errorf("Result = %q, want %q", target.Result, query)
 	}
 }
 
 func TestRootTuiArrowKeysMoveSelection(t *testing.T) {
-	target := NewRootTui()
+	target := NewRootTui("")
 	screen := newTestScreen(t)
 	target.app.SetScreen(screen)
 	target.SetAction()
