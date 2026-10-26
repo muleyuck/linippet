@@ -82,9 +82,10 @@ type listModalTui struct {
 	searchCancel context.CancelFunc
 }
 
-func NewRootTui() *listModalTui {
+func NewRootTui(initialQuery string) *listModalTui {
 	m := newListModalTui()
 	m.modalFunc = m.setRootModal
+	m.input.SetText(initialQuery)
 	return m
 }
 
@@ -158,40 +159,43 @@ func (t *listModalTui) SetAction() {
 		}
 		return event
 	})
-	t.input.SetChangedFunc(func(text string) {
-		if t.searchCancel != nil {
-			t.searchCancel()
-		}
+	t.input.SetChangedFunc(t.search)
+}
 
-		if len(text) <= 0 {
-			t.searchCancel = nil
-			t.list.Clear()
-			for _, linippet := range t.linippets {
-				t.addItem(linippet.Snippet, linippet.Id, nil)
-			}
-			t.list.SetTitle(fmt.Sprintf(" %d/%d ", len(t.linippets), len(t.linippets)))
+func (t *listModalTui) search(text string) {
+	if t.searchCancel != nil {
+		t.searchCancel()
+	}
+
+	if len(text) <= 0 {
+		t.searchCancel = nil
+		t.list.Clear()
+		for _, linippet := range t.linippets {
+			t.addItem(linippet.Snippet, linippet.Id, nil)
+		}
+		t.list.SetTitle(fmt.Sprintf(" %d/%d ", len(t.linippets), len(t.linippets)))
+		return
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.searchCancel = cancel
+	linippets := t.linippets
+	go func() {
+		sorted := fuzzy_search.FuzzySearch(ctx, text, linippets)
+		if sorted == nil {
 			return
 		}
-
-		ctx, cancel := context.WithCancel(context.Background())
-		t.searchCancel = cancel
-		go func() {
-			sorted := fuzzy_search.FuzzySearch(ctx, text, t.linippets)
-			if sorted == nil {
+		t.app.QueueUpdateDraw(func() {
+			if ctx.Err() != nil || t.input.GetText() != text {
 				return
 			}
-			t.app.QueueUpdateDraw(func() {
-				if t.input.GetText() != text {
-					return
-				}
-				t.list.Clear()
-				for _, result := range sorted {
-					t.addItem(result.Linippet.Snippet, result.Linippet.Id, result.Matches)
-				}
-				t.list.SetTitle(fmt.Sprintf(" %d/%d ", len(sorted), len(t.linippets)))
-			})
-		}()
-	})
+			t.list.Clear()
+			for _, result := range sorted {
+				t.addItem(result.Linippet.Snippet, result.Linippet.Id, result.Matches)
+			}
+			t.list.SetTitle(fmt.Sprintf(" %d/%d ", len(sorted), len(t.linippets)))
+		})
+	}()
 }
 
 func (t *listModalTui) StartApp() error {
@@ -232,12 +236,9 @@ func (t *listModalTui) LazyLoadLinippet() {
 			panic(err)
 		}
 		t.app.QueueUpdateDraw(func() {
-			for _, linippet := range linippets {
-				t.addItem(linippet.Snippet, linippet.Id, nil)
-			}
-			t.list.SetTitle(fmt.Sprintf(" %d/%d ", len(linippets), len(linippets)))
+			t.linippets = linippets
+			t.search(t.input.GetText())
 		})
-		t.linippets = linippets
 	}()
 }
 

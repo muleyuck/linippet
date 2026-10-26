@@ -1,5 +1,5 @@
 linippet_apply() {
-    local snippet="$(linippet)"
+    local snippet="$(linippet "$@")"
 
     if [[ -z $snippet ]]; then
         return 1

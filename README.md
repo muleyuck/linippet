@@ -67,6 +67,14 @@ To output the selected snippet to stdout without executing it:
 linippet
 ```
 
+To start with a search query already entered:
+```sh
+lip "テスト"
+linippet "git status"
+```
+The query uses the same fuzzy search as typing in the TUI. You can edit or clear it,
+and a snippet is only selected after you confirm it. Quote queries containing spaces.
+
 ### Triggered by a bind key
 
 Set `LINIPPET_TRIGGER_BIND_KEY` to invoke linippet mid-command. For example:

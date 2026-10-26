@@ -20,9 +20,10 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "linippet",
+	Use:   "linippet [query]",
 	Short: "Choose your snippet and output stdout",
 	Long:  `linippet is submit a snippet you have registered.`,
+	Args:  cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		versionFlag, _ := cmd.Flags().GetBool("version")
 		listFlag, _ := cmd.Flags().GetBool("list")
@@ -41,7 +42,11 @@ var rootCmd = &cobra.Command{
 				fmt.Printf("%d : %s\n", i+1, linippet.Snippet)
 			}
 		} else {
-			t := tui.NewRootTui()
+			query := ""
+			if len(args) > 0 {
+				query = args[0]
+			}
+			t := tui.NewRootTui(query)
 			t.LazyLoadLinippet()
 			t.SetAction()
 			if err := t.StartApp(); err != nil {
